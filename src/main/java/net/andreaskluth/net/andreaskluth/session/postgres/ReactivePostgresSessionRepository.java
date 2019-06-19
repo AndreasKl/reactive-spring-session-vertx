@@ -2,15 +2,15 @@ package net.andreaskluth.net.andreaskluth.session.postgres;
 
 import static java.util.Objects.requireNonNull;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.ext.asyncsql.AsyncSQLClient;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import net.andreaskluth.net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
 import org.springframework.session.ReactiveSessionRepository;
 import org.springframework.session.Session;
-import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
 /**
@@ -33,31 +33,75 @@ public class ReactivePostgresSessionRepository
   @Override
   public Mono<Void> save(PostgresSession postgresSession) {
     return Mono.create(
-        sink -> {
-          asyncSQLClient.call(
-              "INSERT INTO session VALUES ('id')",
-              t -> {
-                System.out.println(t);
-                sink.success(null);
-              });
-        });
+        sink ->
+            asyncSQLClient.updateWithParams(
+                "INSERT INTO session (id) VALUES (?);",
+                new JsonArray().add(postgresSession.getId()),
+                t -> {
+                  if (t.failed()) {
+                    sink.error(new RuntimeException());
+                    return;
+                  }
+                  sink.success(null);
+                }));
   }
 
   @Override
-  public Mono<PostgresSession> findById(String s) {
-    return null;
+  public Mono<PostgresSession> findById(String id) {
+    return Mono.create(
+        sink ->
+            asyncSQLClient.querySingleWithParams(
+                "SELECT id FROM session WHERE id = ?;",
+                new JsonArray().add(id),
+                t -> {
+                  if (t.failed()) {
+                    sink.error(new RuntimeException());
+                    return;
+                  }
+                  sink.success(new PostgresSession(t.result().getString(0)));
+                }));
   }
 
   @Override
-  public Mono<Void> deleteById(String s) {
-    return null;
+  public Mono<Void> deleteById(String id) {
+    return Mono.create(
+        sink ->
+            asyncSQLClient.updateWithParams(
+                "DELETE FROM session WHERE id = ?;",
+                new JsonArray().add(id),
+                t -> {
+                  if (t.failed()) {
+                    sink.error(new RuntimeException());
+                    return;
+                  }
+                  sink.success(null);
+                }));
   }
 
   final class PostgresSession implements Session {
 
+    private final String id;
+    private final boolean isNew;
+
+    /** Generate a new session. */
+    PostgresSession() {
+      this.id = UUID.randomUUID().toString();
+      this.isNew = true;
+    }
+
+    /**
+     * Load an existing session.
+     *
+     * @param id
+     */
+    PostgresSession(String id) {
+      this.id = id;
+      this.isNew = false;
+    }
+
     @Override
     public String getId() {
-      return null;
+      return id;
     }
 
     @Override

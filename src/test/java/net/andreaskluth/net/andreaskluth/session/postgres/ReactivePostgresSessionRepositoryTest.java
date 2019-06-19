@@ -1,34 +1,29 @@
 package net.andreaskluth.net.andreaskluth.session.postgres;
 
-import static io.vertx.ext.asyncsql.PostgreSQLClient.DEFAULT_DATABASE;
-import static io.vertx.ext.asyncsql.PostgreSQLClient.DEFAULT_PORT;
-import static io.vertx.ext.asyncsql.PostgreSQLClient.DEFAULT_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
 import com.opentable.db.postgres.junit.PreparedDbRule;
 import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.asyncsql.AsyncSQLClient;
 import io.vertx.ext.asyncsql.PostgreSQLClient;
-import java.nio.charset.Charset;
+import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Map;
 import net.andreaskluth.net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class ReactivePostgresSessionRepositoryTest {
 
-  @Rule
-  public PreparedDbRule pg =
+  @ClassRule
+  public static final PreparedDbRule embeddedPostgres =
       EmbeddedPostgresRules.preparedDatabase(
           ds -> {
-            try (var con = ds.getConnection();
-                Statement stmt = con.createStatement(); ) {
-              stmt.execute("CREATE DATABASE session;");
-              stmt.execute("CREATE TABLE session (id text);");
+            try (Connection connection = ds.getConnection();
+                Statement statement = connection.createStatement(); ) {
+              statement.execute("CREATE TABLE session (id text PRIMARY KEY);");
             }
           });
 
@@ -48,6 +43,8 @@ public class ReactivePostgresSessionRepositoryTest {
 
     assertThat(loadedSession.getId()).isEqualTo(sessionId);
     assertThat(loadedSession.<String>getAttribute("key")).isEqualTo("value");
+
+    asyncSQLClient.close();
   }
 
   private AsyncSQLClient postgresClient() {
@@ -62,17 +59,20 @@ public class ReactivePostgresSessionRepositoryTest {
     //    long testTimeout = config.getLong("testTimeout", defaultTestTimeout);
     //    Long queryTimeout = config.getLong("queryTimeout");
 
-    Vertx vertx = Vertx.vertx();
-    Map<String, Object> config =
-        Map.of(
-            "database",
-            "session",
-            "username",
-            "postgres",
-            "port",
-            pg.getConnectionInfo().getPort());
-    JsonObject jsonConfig = new JsonObject(config);
+    var vertx = Vertx.vertx();
+    var postgresConfig = new JsonObject(postgresConfig());
+    return PostgreSQLClient.createNonShared(vertx, postgresConfig);
+  }
 
-    return PostgreSQLClient.createNonShared(vertx, jsonConfig);
+  private Map<String, Object> postgresConfig() {
+    return Map.of(
+        "database",
+        "template1",
+        "username",
+        "postgres",
+        "password",
+        "postgres",
+        "port",
+        embeddedPostgres.getConnectionInfo().getPort());
   }
 }
