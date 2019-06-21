@@ -3,8 +3,10 @@ package net.andreaskluth.net.andreaskluth.session.postgres;
 import static java.util.Objects.requireNonNull;
 
 import io.reactiverse.pgclient.PgPool;
+import io.reactiverse.pgclient.PgRowSet;
 import io.reactiverse.pgclient.Row;
 import io.reactiverse.pgclient.Tuple;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.buffer.Buffer;
 import java.time.Clock;
 import java.time.Duration;
@@ -17,6 +19,7 @@ import net.andreaskluth.net.andreaskluth.session.postgres.ReactivePostgresSessio
 import org.springframework.session.ReactiveSessionRepository;
 import org.springframework.session.Session;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoSink;
 
 /**
  * A {@link ReactiveSessionRepository} that is implemented using vert.x reactive postgres client.
@@ -24,7 +27,42 @@ import reactor.core.publisher.Mono;
 public class ReactivePostgresSessionRepository
     implements ReactiveSessionRepository<PostgresSession> {
 
-  public static final int DEFAULT_MAX_INACTIVE_INTERVAL_SECONDS = 1800;
+  private static final int DEFAULT_MAX_INACTIVE_INTERVAL_SECONDS = 1800;
+  public static final String INSERT_STATEMENT =
+      "INSERT INTO session "
+          + " ("
+          + "   id,"
+          + "   session_id,"
+          + "   session_data,"
+          + "   creation_time,"
+          + "   last_accessed_time,"
+          + "   expiry_time,"
+          + "   max_inactive_interval"
+          + " ) "
+          + " VALUES "
+          + " ("
+          + "   $1,"
+          + "   $2,"
+          + "   $3,"
+          + "   $4,"
+          + "   $5,"
+          + "   $6,"
+          + "   $7"
+          + " );";
+  public static final String UPDATE_STATEMENT =
+      "UPDATE session "
+          + " SET "
+          + "   session_id = $2,"
+          + "   session_data = $3,"
+          + "   last_accessed_time = $4,"
+          + "   expiry_time = $5,"
+          + "   max_inactive_interval = $6"
+          + " WHERE id = $1;";
+  public static final String SELECT_STATEMENT =
+      "SELECT "
+          + " id, session_id, session_data, creation_time,"
+          + " last_accessed_time, max_inactive_interval "
+          + "FROM session WHERE session_id = $1;";
 
   private final PgPool pgPool;
   private final SerializationStrategy serializationStrategy;
@@ -59,48 +97,17 @@ public class ReactivePostgresSessionRepository
     return Mono.create(
         sink -> {
           try {
-            byte[] sessionData = sessionDataAsBytes(postgresSession);
-
             pgPool.preparedQuery(
-                "INSERT INTO session "
-                    + " ("
-                    + "   id,"
-                    + "   session_id,"
-                    + "   session_data,"
-                    + "   creation_time,"
-                    + "   last_accessed_time,"
-                    + "   expiry_time,"
-                    + "   max_inactive_interval"
-                    + " ) "
-                    + " VALUES "
-                    + " ("
-                    + "   $1,"
-                    + "   $2,"
-                    + "   $3,"
-                    + "   $4,"
-                    + "   $5,"
-                    + "   $6,"
-                    + "   $7"
-                    + " );",
+                INSERT_STATEMENT,
                 Tuple.of(
                     postgresSession.internalPrimaryKey,
                     postgresSession.getId(),
-                    Buffer.buffer(sessionData),
+                    Buffer.buffer(sessionDataAsBytes(postgresSession)),
                     postgresSession.getCreationTime().toEpochMilli(),
                     postgresSession.getLastAccessedTime().toEpochMilli(),
                     postgresSession.getExpiryTime().toEpochMilli(),
                     (int) postgresSession.getMaxInactiveInterval().getSeconds()),
-                t -> {
-                  if (t.succeeded() && t.result().rowCount() == 1) {
-                    postgresSession.clearChangeFlags();
-                    sink.success();
-                    return;
-                  }
-                  sink.error(
-                      t.cause() == null
-                          ? new RuntimeException("SQLStatement did not succeed.")
-                          : t.cause());
-                });
+                asyncResult -> handleInsertOrUpdate(asyncResult, sink, postgresSession));
           } catch (Exception ex) {
             sink.error(ex);
           }
@@ -113,38 +120,34 @@ public class ReactivePostgresSessionRepository
     return Mono.create(
         sink -> {
           try {
-            byte[] sessionData = sessionDataAsBytes(postgresSession);
             pgPool.preparedQuery(
-                "UPDATE session "
-                    + " SET "
-                    + "   session_id = $1,"
-                    + "   session_data = $2,"
-                    + "   last_accessed_time = $3,"
-                    + "   expiry_time = $4,"
-                    + "   max_inactive_interval = $5"
-                    + " WHERE id = $6;",
+                UPDATE_STATEMENT,
                 Tuple.of(
+                    postgresSession.internalPrimaryKey,
                     postgresSession.getId(),
-                    Buffer.buffer(sessionData),
+                    Buffer.buffer(sessionDataAsBytes(postgresSession)),
                     postgresSession.getLastAccessedTime().toEpochMilli(),
                     postgresSession.getExpiryTime().toEpochMilli(),
-                    (int) postgresSession.getMaxInactiveInterval().getSeconds(),
-                    postgresSession.internalPrimaryKey),
-                t -> {
-                  if (t.succeeded() && t.result().rowCount() == 1) {
-                    postgresSession.clearChangeFlags();
-                    sink.success();
-                    return;
-                  }
-                  sink.error(
-                      t.cause() == null
-                          ? new RuntimeException("SQLStatement did not succeed.")
-                          : t.cause());
-                });
+                    (int) postgresSession.getMaxInactiveInterval().getSeconds()),
+                asyncResult -> handleInsertOrUpdate(asyncResult, sink, postgresSession));
           } catch (Exception ex) {
             sink.error(ex);
           }
         });
+  }
+
+  private void handleInsertOrUpdate(
+      AsyncResult<PgRowSet> asyncResult, MonoSink<Void> sink, PostgresSession postgresSession) {
+    if (asyncResult.succeeded()) {
+      if (asyncResult.result().rowCount() == 1) {
+        postgresSession.clearChangeFlags();
+        sink.success();
+      } else {
+        sink.error(new RuntimeException("SQLStatement did not return the expected row count."));
+      }
+      return;
+    }
+    sink.error(asyncResult.cause());
   }
 
   @Override
@@ -152,41 +155,39 @@ public class ReactivePostgresSessionRepository
     return Mono.create(
         sink ->
             pgPool.preparedQuery(
-                "SELECT "
-                    + " id, session_id, session_data, creation_time,"
-                    + " last_accessed_time, max_inactive_interval "
-                    + "FROM session WHERE session_id = $1;",
+                SELECT_STATEMENT,
                 Tuple.of(id),
-                t -> {
-                  if (t.succeeded() && t.result().rowCount() == 1) {
-                    try {
-                      Row row = t.result().iterator().next();
-
-                      Map<String, Object> sessionData =
-                          deserializationStrategy.deserialize(
-                              row.getBuffer("session_data").getBytes());
-                      PostgresSession session =
-                          new PostgresSession(
-                              row.getUUID("id"),
-                              row.getString("session_id"),
-                              sessionData,
-                              Instant.ofEpochMilli(row.getLong("creation_time")),
-                              Instant.ofEpochMilli(row.getLong("last_accessed_time")),
-                              Duration.ofSeconds(row.getInteger("max_inactive_interval")));
-                      sink.success(session.isExpired() ? null : session);
-                      return;
-
-                    } catch (Exception ex) {
-                      sink.error(ex);
+                asyncResult -> {
+                  if (asyncResult.succeeded()) {
+                    if (asyncResult.result().rowCount() == 1) {
+                      try {
+                        Row row = asyncResult.result().iterator().next();
+                        PostgresSession session = mapRowToPostgresSession(row);
+                        sink.success(session.isExpired() ? null : session);
+                      } catch (Exception ex) {
+                        sink.error(ex);
+                      }
+                    } else {
+                      sink.error(
+                          new RuntimeException(
+                              "SQLStatement did not return the expected row count."));
                     }
                     return;
                   }
-
-                  sink.error(
-                      t.cause() == null
-                          ? new RuntimeException("SQLStatement did not succeed.")
-                          : t.cause());
+                  sink.error(asyncResult.cause());
                 }));
+  }
+
+  private PostgresSession mapRowToPostgresSession(Row row) {
+    Map<String, Object> sessionData =
+        deserializationStrategy.deserialize(row.getBuffer("session_data").getBytes());
+    return new PostgresSession(
+        row.getUUID("id"),
+        row.getString("session_id"),
+        sessionData,
+        Instant.ofEpochMilli(row.getLong("creation_time")),
+        Instant.ofEpochMilli(row.getLong("last_accessed_time")),
+        Duration.ofSeconds(row.getInteger("max_inactive_interval")));
   }
 
   @Override
@@ -197,11 +198,11 @@ public class ReactivePostgresSessionRepository
                 "DELETE FROM session WHERE session_id = $1;",
                 Tuple.of(id),
                 t -> {
-                  if (t.failed()) {
-                    sink.error(t.cause());
+                  if (t.succeeded()) {
+                    sink.success();
                     return;
                   }
-                  sink.success();
+                  sink.error(t.cause());
                 }));
   }
 

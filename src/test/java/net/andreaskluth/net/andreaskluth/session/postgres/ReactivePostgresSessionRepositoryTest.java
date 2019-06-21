@@ -14,6 +14,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ReactivePostgresSessionRepositoryTest {
@@ -122,20 +123,16 @@ public class ReactivePostgresSessionRepositoryTest {
 
   @Test
   public void savingInParallel() {
-    // FIXME: This test should have failed, both save calls try to insert a new record and the last
-    // one fails with a duplicate
-    // key issue. However due to whatever reasons (no auto commit?) no commit is executed.
-
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
     session.setAttribute("keyA", "value A");
-    Mono<Void> saveA = repo.save(session);
+    var saveA = repo.save(session);
 
     session.setAttribute("keyB", "value B");
-    Mono<Void> saveB = repo.save(session);
+    var saveB = repo.save(session);
 
-    Mono.zip(saveA, saveB).block();
+    Flux.concat(saveA, saveB).blockLast();
 
     var reloadedSession = repo.findById(session.getId()).block();
     assertThat(reloadedSession.<String>getAttribute("keyA")).isEqualTo("value A");
