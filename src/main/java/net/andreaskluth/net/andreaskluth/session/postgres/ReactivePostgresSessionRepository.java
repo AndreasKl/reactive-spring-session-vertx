@@ -93,7 +93,7 @@ public class ReactivePostgresSessionRepository
                 t -> {
                   if (t.succeeded() && t.result().rowCount() == 1) {
                     postgresSession.clearChangeFlags();
-                    sink.success(null);
+                    sink.success();
                     return;
                   }
                   sink.error(
@@ -133,7 +133,7 @@ public class ReactivePostgresSessionRepository
                 t -> {
                   if (t.succeeded() && t.result().rowCount() == 1) {
                     postgresSession.clearChangeFlags();
-                    sink.success(null);
+                    sink.success();
                     return;
                   }
                   sink.error(
@@ -160,21 +160,20 @@ public class ReactivePostgresSessionRepository
                 t -> {
                   if (t.succeeded() && t.result().rowCount() == 1) {
                     try {
-                      for (Row result : t.result()) {
-                        Map<String, Object> sessionData =
-                            deserializationStrategy.deserialize(
-                                result.getBuffer("session_data").getBytes());
-                        PostgresSession session =
-                            new PostgresSession(
-                                result.getUUID("id"),
-                                result.getString("session_id"),
-                                sessionData,
-                                Instant.ofEpochMilli(result.getLong("creation_time")),
-                                Instant.ofEpochMilli(result.getLong("last_accessed_time")),
-                                Duration.ofSeconds(result.getInteger("max_inactive_interval")));
-                        sink.success(session.isExpired() ? null : session);
-                        break;
-                      }
+                      Row row = t.result().iterator().next();
+
+                      Map<String, Object> sessionData =
+                          deserializationStrategy.deserialize(
+                              row.getBuffer("session_data").getBytes());
+                      PostgresSession session =
+                          new PostgresSession(
+                              row.getUUID("id"),
+                              row.getString("session_id"),
+                              sessionData,
+                              Instant.ofEpochMilli(row.getLong("creation_time")),
+                              Instant.ofEpochMilli(row.getLong("last_accessed_time")),
+                              Duration.ofSeconds(row.getInteger("max_inactive_interval")));
+                      sink.success(session.isExpired() ? null : session);
                       return;
 
                     } catch (Exception ex) {
@@ -202,7 +201,7 @@ public class ReactivePostgresSessionRepository
                     sink.error(t.cause());
                     return;
                   }
-                  sink.success(null);
+                  sink.success();
                 }));
   }
 
