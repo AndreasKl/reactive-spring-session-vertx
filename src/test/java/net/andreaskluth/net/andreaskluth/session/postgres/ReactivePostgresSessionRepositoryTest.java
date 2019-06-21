@@ -4,14 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
 import com.opentable.db.postgres.junit.PreparedDbRule;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.asyncsql.AsyncSQLClient;
-import io.vertx.ext.asyncsql.PostgreSQLClient;
+import io.reactiverse.pgclient.PgClient;
+import io.reactiverse.pgclient.PgPool;
+import io.reactiverse.pgclient.PgPoolOptions;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.time.Clock;
-import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -20,7 +18,7 @@ import reactor.core.publisher.Mono;
 
 public class ReactivePostgresSessionRepositoryTest {
 
-  private AsyncSQLClient asyncSQLClient = null;
+  private PgPool pgPool = null;
 
   @ClassRule
   public static final PreparedDbRule embeddedPostgres =
@@ -31,9 +29,9 @@ public class ReactivePostgresSessionRepositoryTest {
               statement.execute(
                   "CREATE TABLE session"
                       + " ( "
-                      + "   id text PRIMARY KEY,"
+                      + "   id UUID PRIMARY KEY,"
                       + "   session_id text NOT NULL,"
-                      + "   session_data text,"
+                      + "   session_data bytea,"
                       + "   creation_time INT8 NOT NULL,"
                       + "   last_accessed_time INT8  NOT NULL,"
                       + "   expiry_time INT8 NOT NULL,"
@@ -45,12 +43,12 @@ public class ReactivePostgresSessionRepositoryTest {
 
   @Before
   public void before() {
-    asyncSQLClient = postgresClient();
+    pgPool = pool();
   }
 
   @After
   public void after() {
-    asyncSQLClient.close();
+    pgPool.close();
   }
 
   @Test
@@ -124,7 +122,8 @@ public class ReactivePostgresSessionRepositoryTest {
 
   @Test
   public void savingInParallel() {
-    // FIXME: This test should have failed, both save calls try to insert a new record and the last one fails with a duplicate
+    // FIXME: This test should have failed, both save calls try to insert a new record and the last
+    // one fails with a duplicate
     // key issue. However due to whatever reasons (no auto commit?) no commit is executed.
 
     var repo = sessionRepository();
@@ -145,38 +144,21 @@ public class ReactivePostgresSessionRepositoryTest {
 
   private ReactivePostgresSessionRepository sessionRepository() {
     return new ReactivePostgresSessionRepository(
-        asyncSQLClient,
+        pgPool,
         new SerializationStrategy(),
         new DeserializationStrategy(),
         Clock.systemDefaultZone());
   }
 
-  private AsyncSQLClient postgresClient() {
-
-    //    String host = config.getString("host", defaultHost);
-    //    int port = config.getInteger("port", defaultPort);
-    //    String username = config.getString("username", defaultUser);
-    //    String password = config.getString("password", defaultPassword);
-    //    String database = config.getString("database", defaultDatabase);
-    //    Charset charset = Charset.forName(config.getString("charset", defaultCharset));
-    //    long connectTimeout = config.getLong("connectTimeout", defaultConnectTimeout);
-    //    long testTimeout = config.getLong("testTimeout", defaultTestTimeout);
-    //    Long queryTimeout = config.getLong("queryTimeout");
-
-    var vertx = Vertx.vertx();
-    var postgresConfig = new JsonObject(postgresConfig());
-    return PostgreSQLClient.createNonShared(vertx, postgresConfig);
-  }
-
-  private Map<String, Object> postgresConfig() {
-    return Map.of(
-        "database",
-        "template1",
-        "username",
-        "postgres",
-        "password",
-        "postgres",
-        "port",
-        embeddedPostgres.getConnectionInfo().getPort());
+  private PgPool pool() {
+    PgPoolOptions options =
+        new PgPoolOptions()
+            .setPort(embeddedPostgres.getConnectionInfo().getPort())
+            .setHost("localhost")
+            .setDatabase("template1")
+            .setUser("postgres")
+            .setPassword("postgres")
+            .setMaxSize(5);
+    return PgClient.pool(options);
   }
 }

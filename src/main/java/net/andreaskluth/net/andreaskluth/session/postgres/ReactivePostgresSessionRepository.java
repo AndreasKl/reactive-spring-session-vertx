@@ -2,8 +2,10 @@ package net.andreaskluth.net.andreaskluth.session.postgres;
 
 import static java.util.Objects.requireNonNull;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.ext.asyncsql.AsyncSQLClient;
+import io.reactiverse.pgclient.PgPool;
+import io.reactiverse.pgclient.Row;
+import io.reactiverse.pgclient.Tuple;
+import io.vertx.core.buffer.Buffer;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -24,18 +26,18 @@ public class ReactivePostgresSessionRepository
 
   public static final int DEFAULT_MAX_INACTIVE_INTERVAL_SECONDS = 1800;
 
-  private final AsyncSQLClient asyncSQLClient;
+  private final PgPool pgPool;
   private final SerializationStrategy serializationStrategy;
   private final DeserializationStrategy deserializationStrategy;
   private final Clock clock;
   private Duration maxInactiveInterval = Duration.ofSeconds(DEFAULT_MAX_INACTIVE_INTERVAL_SECONDS);
 
   public ReactivePostgresSessionRepository(
-      AsyncSQLClient asyncSQLClient,
+      PgPool pgPool,
       SerializationStrategy serializationStrategy,
       DeserializationStrategy deserializationStrategy,
       Clock clock) {
-    this.asyncSQLClient = requireNonNull(asyncSQLClient, "asyncSQLClient must not be null");
+    this.pgPool = requireNonNull(pgPool, "pgPool must not be null");
     this.serializationStrategy =
         requireNonNull(serializationStrategy, "serializationStrategy must not be null");
     this.deserializationStrategy =
@@ -59,7 +61,7 @@ public class ReactivePostgresSessionRepository
           try {
             byte[] sessionData = sessionDataAsBytes(postgresSession);
 
-            asyncSQLClient.updateWithParams(
+            pgPool.preparedQuery(
                 "INSERT INTO session "
                     + " ("
                     + "   id,"
@@ -72,24 +74,24 @@ public class ReactivePostgresSessionRepository
                     + " ) "
                     + " VALUES "
                     + " ("
-                    + "   ?,"
-                    + "   ?,"
-                    + "   ?,"
-                    + "   ?,"
-                    + "   ?,"
-                    + "   ?,"
-                    + "   ?"
+                    + "   $1,"
+                    + "   $2,"
+                    + "   $3,"
+                    + "   $4,"
+                    + "   $5,"
+                    + "   $6,"
+                    + "   $7"
                     + " );",
-                new JsonArray()
-                    .add(postgresSession.internalPrimaryKey)
-                    .add(postgresSession.getId())
-                    .add(sessionData)
-                    .add(postgresSession.getCreationTime().toEpochMilli())
-                    .add(postgresSession.getLastAccessedTime().toEpochMilli())
-                    .add(postgresSession.getExpiryTime().toEpochMilli())
-                    .add((int) postgresSession.getMaxInactiveInterval().getSeconds()),
+                Tuple.of(
+                    postgresSession.internalPrimaryKey,
+                    postgresSession.getId(),
+                    Buffer.buffer(sessionData),
+                    postgresSession.getCreationTime().toEpochMilli(),
+                    postgresSession.getLastAccessedTime().toEpochMilli(),
+                    postgresSession.getExpiryTime().toEpochMilli(),
+                    (int) postgresSession.getMaxInactiveInterval().getSeconds()),
                 t -> {
-                  if (t.succeeded() && t.result().getUpdated() == 1) {
+                  if (t.succeeded() && t.result().rowCount() == 1) {
                     postgresSession.clearChangeFlags();
                     sink.success(null);
                     return;
@@ -112,24 +114,24 @@ public class ReactivePostgresSessionRepository
         sink -> {
           try {
             byte[] sessionData = sessionDataAsBytes(postgresSession);
-            asyncSQLClient.updateWithParams(
+            pgPool.preparedQuery(
                 "UPDATE session "
                     + " SET "
-                    + "   session_id = ?,"
-                    + "   session_data = ?,"
-                    + "   last_accessed_time = ?,"
-                    + "   expiry_time = ?,"
-                    + "   max_inactive_interval = ?"
-                    + " WHERE id = ?;",
-                new JsonArray()
-                    .add(postgresSession.getId())
-                    .add(sessionData)
-                    .add(postgresSession.getLastAccessedTime().toEpochMilli())
-                    .add(postgresSession.getExpiryTime().toEpochMilli())
-                    .add((int) postgresSession.getMaxInactiveInterval().getSeconds())
-                    .add(postgresSession.internalPrimaryKey),
+                    + "   session_id = $1,"
+                    + "   session_data = $2,"
+                    + "   last_accessed_time = $3,"
+                    + "   expiry_time = $4,"
+                    + "   max_inactive_interval = $5"
+                    + " WHERE id = $6;",
+                Tuple.of(
+                    postgresSession.getId(),
+                    Buffer.buffer(sessionData),
+                    postgresSession.getLastAccessedTime().toEpochMilli(),
+                    postgresSession.getExpiryTime().toEpochMilli(),
+                    (int) postgresSession.getMaxInactiveInterval().getSeconds(),
+                    postgresSession.internalPrimaryKey),
                 t -> {
-                  if (t.succeeded() && t.result().getUpdated() == 1) {
+                  if (t.succeeded() && t.result().rowCount() == 1) {
                     postgresSession.clearChangeFlags();
                     sink.success(null);
                     return;
@@ -149,33 +151,42 @@ public class ReactivePostgresSessionRepository
   public Mono<PostgresSession> findById(String id) {
     return Mono.create(
         sink ->
-            asyncSQLClient.querySingleWithParams(
+            pgPool.preparedQuery(
                 "SELECT "
                     + " id, session_id, session_data, creation_time,"
                     + " last_accessed_time, max_inactive_interval "
-                    + "FROM session WHERE session_id = ?;",
-                new JsonArray().add(id),
+                    + "FROM session WHERE session_id = $1;",
+                Tuple.of(id),
                 t -> {
-                  if (t.failed()) {
-                    sink.error(t.cause());
+                  if (t.succeeded() && t.result().rowCount() == 1) {
+                    try {
+                      for (Row result : t.result()) {
+                        Map<String, Object> sessionData =
+                            deserializationStrategy.deserialize(
+                                result.getBuffer("session_data").getBytes());
+                        PostgresSession session =
+                            new PostgresSession(
+                                result.getUUID("id"),
+                                result.getString("session_id"),
+                                sessionData,
+                                Instant.ofEpochMilli(result.getLong("creation_time")),
+                                Instant.ofEpochMilli(result.getLong("last_accessed_time")),
+                                Duration.ofSeconds(result.getInteger("max_inactive_interval")));
+                        sink.success(session.isExpired() ? null : session);
+                        break;
+                      }
+                      return;
+
+                    } catch (Exception ex) {
+                      sink.error(ex);
+                    }
                     return;
                   }
-                  try {
-                    JsonArray result = t.result();
-                    Map<String, Object> sessionData =
-                        deserializationStrategy.deserialize(result.getBinary(2));
-                    PostgresSession session =
-                        new PostgresSession(
-                            result.getString(0),
-                            result.getString(1),
-                            sessionData,
-                            Instant.ofEpochMilli(result.getLong(3)),
-                            Instant.ofEpochMilli(result.getLong(4)),
-                            Duration.ofSeconds(result.getInteger(5)));
-                    sink.success(session.isExpired() ? null : session);
-                  } catch (Exception ex) {
-                    sink.error(ex);
-                  }
+
+                  sink.error(
+                      t.cause() == null
+                          ? new RuntimeException("SQLStatement did not succeed.")
+                          : t.cause());
                 }));
   }
 
@@ -183,9 +194,9 @@ public class ReactivePostgresSessionRepository
   public Mono<Void> deleteById(String id) {
     return Mono.create(
         sink ->
-            asyncSQLClient.updateWithParams(
-                "DELETE FROM session WHERE session_id = ?;",
-                new JsonArray().add(id),
+            pgPool.preparedQuery(
+                "DELETE FROM session WHERE session_id = $1;",
+                Tuple.of(id),
                 t -> {
                   if (t.failed()) {
                     sink.error(t.cause());
@@ -201,7 +212,7 @@ public class ReactivePostgresSessionRepository
 
   final class PostgresSession implements Session {
 
-    private final String internalPrimaryKey;
+    private final UUID internalPrimaryKey;
     private final Map<String, Object> sessionData;
 
     private String sessionId;
@@ -213,7 +224,7 @@ public class ReactivePostgresSessionRepository
 
     /** Generate a new session. */
     PostgresSession() {
-      this.internalPrimaryKey = UUID.randomUUID().toString();
+      this.internalPrimaryKey = UUID.randomUUID();
       this.sessionId = UUID.randomUUID().toString();
       this.sessionData = new HashMap<>();
       this.creationTime = ReactivePostgresSessionRepository.this.clock.instant();
@@ -224,7 +235,7 @@ public class ReactivePostgresSessionRepository
 
     /** Load an existing session. */
     PostgresSession(
-        String internalPrimaryKey,
+        UUID internalPrimaryKey,
         String sessionId,
         Map<String, Object> sessionData,
         Instant creationTime,
