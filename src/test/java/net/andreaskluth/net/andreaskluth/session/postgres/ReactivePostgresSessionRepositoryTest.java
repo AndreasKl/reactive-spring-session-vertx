@@ -12,10 +12,14 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Map;
 import net.andreaskluth.net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 public class ReactivePostgresSessionRepositoryTest {
+
+  private AsyncSQLClient asyncSQLClient = null;
 
   @ClassRule
   public static final PreparedDbRule embeddedPostgres =
@@ -23,14 +27,23 @@ public class ReactivePostgresSessionRepositoryTest {
           ds -> {
             try (Connection connection = ds.getConnection();
                 Statement statement = connection.createStatement(); ) {
-              statement.execute("CREATE TABLE session (id text PRIMARY KEY);");
+              statement.execute("CREATE TABLE session (id text PRIMARY KEY, session_data text);");
             }
           });
 
+  @Before
+  public void before() {
+    asyncSQLClient = postgresClient();
+  }
+
+  @After
+  public void after() {
+    asyncSQLClient.close();
+  }
+
   @Test
   public void saveAndLoadWorks() {
-    AsyncSQLClient asyncSQLClient = postgresClient();
-    ReactivePostgresSessionRepository repo = new ReactivePostgresSessionRepository(asyncSQLClient);
+    ReactivePostgresSessionRepository repo = sessionRepository();
 
     PostgresSession session = repo.createSession().block();
     session.setAttribute("key", "value");
@@ -43,8 +56,11 @@ public class ReactivePostgresSessionRepositoryTest {
 
     assertThat(loadedSession.getId()).isEqualTo(sessionId);
     assertThat(loadedSession.<String>getAttribute("key")).isEqualTo("value");
+  }
 
-    asyncSQLClient.close();
+  private ReactivePostgresSessionRepository sessionRepository() {
+    return new ReactivePostgresSessionRepository(
+        asyncSQLClient, new SerializationStrategy(), new DeserializationStrategy());
   }
 
   private AsyncSQLClient postgresClient() {

@@ -6,6 +6,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.ext.asyncsql.AsyncSQLClient;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.andreaskluth.net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
@@ -20,9 +22,18 @@ public class ReactivePostgresSessionRepository
     implements ReactiveSessionRepository<PostgresSession> {
 
   private AsyncSQLClient asyncSQLClient;
+  private final SerializationStrategy serializationStrategy;
+  private final DeserializationStrategy deserializationStrategy;
 
-  public ReactivePostgresSessionRepository(AsyncSQLClient asyncSQLClient) {
+  public ReactivePostgresSessionRepository(
+      AsyncSQLClient asyncSQLClient,
+      SerializationStrategy serializationStrategy,
+      DeserializationStrategy deserializationStrategy) {
     this.asyncSQLClient = requireNonNull(asyncSQLClient, "asyncSQLClient must not be null");
+    this.serializationStrategy =
+        requireNonNull(serializationStrategy, "serializationStrategy must not be null");
+    this.deserializationStrategy =
+        requireNonNull(deserializationStrategy, "deserializationStrategy must not be null");
   }
 
   @Override
@@ -32,14 +43,16 @@ public class ReactivePostgresSessionRepository
 
   @Override
   public Mono<Void> save(PostgresSession postgresSession) {
+    byte[] sessionData = serializationStrategy.serialize(postgresSession.sessionData);
+
     return Mono.create(
         sink ->
             asyncSQLClient.updateWithParams(
-                "INSERT INTO session (id) VALUES (?);",
-                new JsonArray().add(postgresSession.getId()),
+                "INSERT INTO session (id, session_data) VALUES (?, ?);",
+                new JsonArray().add(postgresSession.getId()).add(sessionData),
                 t -> {
                   if (t.failed()) {
-                    sink.error(new RuntimeException());
+                    sink.error(t.cause());
                     return;
                   }
                   sink.success(null);
@@ -51,14 +64,21 @@ public class ReactivePostgresSessionRepository
     return Mono.create(
         sink ->
             asyncSQLClient.querySingleWithParams(
-                "SELECT id FROM session WHERE id = ?;",
+                "SELECT id, session_data FROM session WHERE id = ?;",
                 new JsonArray().add(id),
                 t -> {
                   if (t.failed()) {
-                    sink.error(new RuntimeException());
+                    sink.error(t.cause());
                     return;
                   }
-                  sink.success(new PostgresSession(t.result().getString(0)));
+                  try {
+                    Map<String, Object> sessionData =
+                        deserializationStrategy.deserialize(t.result().getBinary(1));
+                    sink.success(new PostgresSession(t.result().getString(0), sessionData));
+                  } catch (Exception ex) {
+                    sink.error(ex);
+                    return;
+                  }
                 }));
   }
 
@@ -71,7 +91,7 @@ public class ReactivePostgresSessionRepository
                 new JsonArray().add(id),
                 t -> {
                   if (t.failed()) {
-                    sink.error(new RuntimeException());
+                    sink.error(t.cause());
                     return;
                   }
                   sink.success(null);
@@ -82,20 +102,19 @@ public class ReactivePostgresSessionRepository
 
     private final String id;
     private final boolean isNew;
+    private final Map<String, Object> sessionData;
 
     /** Generate a new session. */
     PostgresSession() {
       this.id = UUID.randomUUID().toString();
+      this.sessionData = new HashMap<>();
       this.isNew = true;
     }
 
-    /**
-     * Load an existing session.
-     *
-     * @param id
-     */
-    PostgresSession(String id) {
+    /** Load an existing session. */
+    PostgresSession(String id, Map<String, Object> sessionData) {
       this.id = id;
+      this.sessionData = sessionData;
       this.isNew = false;
     }
 
@@ -110,20 +129,25 @@ public class ReactivePostgresSessionRepository
     }
 
     @Override
-    public <T> T getAttribute(String s) {
-      return null;
+    @SuppressWarnings("unchecked")
+    public <T> T getAttribute(String key) {
+      return (T) sessionData.get(key);
     }
 
     @Override
     public Set<String> getAttributeNames() {
-      return null;
+      return sessionData.keySet();
     }
 
     @Override
-    public void setAttribute(String s, Object o) {}
+    public void setAttribute(String key, Object value) {
+      sessionData.put(key, value);
+    }
 
     @Override
-    public void removeAttribute(String s) {}
+    public void removeAttribute(String key) {
+      sessionData.remove(key);
+    }
 
     @Override
     public Instant getCreationTime() {
