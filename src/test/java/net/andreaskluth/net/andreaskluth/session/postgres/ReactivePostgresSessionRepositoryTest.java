@@ -10,12 +10,13 @@ import io.vertx.ext.asyncsql.AsyncSQLClient;
 import io.vertx.ext.asyncsql.PostgreSQLClient;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.time.Clock;
 import java.util.Map;
-import net.andreaskluth.net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import reactor.core.publisher.Mono;
 
 public class ReactivePostgresSessionRepositoryTest {
 
@@ -27,7 +28,18 @@ public class ReactivePostgresSessionRepositoryTest {
           ds -> {
             try (Connection connection = ds.getConnection();
                 Statement statement = connection.createStatement(); ) {
-              statement.execute("CREATE TABLE session (id text PRIMARY KEY, session_data text);");
+              statement.execute(
+                  "CREATE TABLE session"
+                      + " ( "
+                      + "   id text PRIMARY KEY,"
+                      + "   session_id text NOT NULL,"
+                      + "   session_data text,"
+                      + "   creation_time INT8 NOT NULL,"
+                      + "   last_accessed_time INT8  NOT NULL,"
+                      + "   expiry_time INT8 NOT NULL,"
+                      + "   max_inactive_interval INT4 NOT NULL"
+                      + " );");
+              statement.execute("CREATE INDEX session_session_id_idx ON session (session_id);");
             }
           });
 
@@ -42,25 +54,101 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void saveAndLoadWorks() {
-    ReactivePostgresSessionRepository repo = sessionRepository();
+  public void saveAndLoadWithAttributes() {
+    var repo = sessionRepository();
+    var session = repo.createSession().block();
 
-    PostgresSession session = repo.createSession().block();
     session.setAttribute("key", "value");
 
-    String sessionId = session.getId();
+    var sessionId = session.getId();
 
     repo.save(session).block();
 
-    PostgresSession loadedSession = repo.findById(sessionId).block();
+    var loadedSession = repo.findById(sessionId).block();
 
     assertThat(loadedSession.getId()).isEqualTo(sessionId);
     assertThat(loadedSession.<String>getAttribute("key")).isEqualTo("value");
   }
 
+  @Test
+  public void rotateSessionId() {
+    var repo = sessionRepository();
+    var session = repo.createSession().block();
+
+    var sessionId = session.getId();
+    String changedSessionId = session.changeSessionId();
+
+    repo.save(session).block();
+
+    var loadedSession = repo.findById(changedSessionId).block();
+
+    assertThat(sessionId).isNotEqualTo(changedSessionId);
+    assertThat(loadedSession.getId()).isEqualTo(changedSessionId);
+  }
+
+  @Test
+  public void updatingValuesInASession() {
+    var repo = sessionRepository();
+    var session = repo.createSession().block();
+
+    session.setAttribute("key", "value");
+
+    repo.save(session).block();
+
+    var reloadedSession = repo.findById(session.getId()).block();
+
+    reloadedSession.setAttribute("key", "another value");
+
+    repo.save(reloadedSession).block();
+
+    assertThat(reloadedSession.<String>getAttribute("key")).isEqualTo("another value");
+  }
+
+  @Test
+  public void savingMultipleTimes() {
+    var repo = sessionRepository();
+    var session = repo.createSession().block();
+
+    session.setAttribute("keyA", "value A");
+    Mono<Void> saveA = repo.save(session);
+    saveA.block();
+
+    session.setAttribute("keyB", "value B");
+    Mono<Void> saveB = repo.save(session);
+    saveB.block();
+
+    var reloadedSession = repo.findById(session.getId()).block();
+    assertThat(reloadedSession.<String>getAttribute("keyA")).isEqualTo("value A");
+    assertThat(reloadedSession.<String>getAttribute("keyB")).isEqualTo("value B");
+  }
+
+  @Test
+  public void savingInParallel() {
+    // FIXME: This test should have failed, both save calls try to insert a new record and the last one fails with a duplicate
+    // key issue. However due to whatever reasons (no auto commit?) no commit is executed.
+
+    var repo = sessionRepository();
+    var session = repo.createSession().block();
+
+    session.setAttribute("keyA", "value A");
+    Mono<Void> saveA = repo.save(session);
+
+    session.setAttribute("keyB", "value B");
+    Mono<Void> saveB = repo.save(session);
+
+    Mono.zip(saveA, saveB).block();
+
+    var reloadedSession = repo.findById(session.getId()).block();
+    assertThat(reloadedSession.<String>getAttribute("keyA")).isEqualTo("value A");
+    assertThat(reloadedSession.<String>getAttribute("keyB")).isEqualTo("value B");
+  }
+
   private ReactivePostgresSessionRepository sessionRepository() {
     return new ReactivePostgresSessionRepository(
-        asyncSQLClient, new SerializationStrategy(), new DeserializationStrategy());
+        asyncSQLClient,
+        new SerializationStrategy(),
+        new DeserializationStrategy(),
+        Clock.systemDefaultZone());
   }
 
   private AsyncSQLClient postgresClient() {
