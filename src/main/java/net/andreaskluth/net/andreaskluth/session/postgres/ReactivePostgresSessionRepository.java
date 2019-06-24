@@ -28,6 +28,7 @@ public class ReactivePostgresSessionRepository
     implements ReactiveSessionRepository<PostgresSession> {
 
   private static final int DEFAULT_MAX_INACTIVE_INTERVAL_SECONDS = 1800;
+
   public static final String INSERT_STATEMENT =
       "INSERT INTO session "
           + " ("
@@ -49,6 +50,7 @@ public class ReactivePostgresSessionRepository
           + "   $6,"
           + "   $7"
           + " );";
+
   public static final String UPDATE_STATEMENT =
       "UPDATE session "
           + " SET "
@@ -58,6 +60,7 @@ public class ReactivePostgresSessionRepository
           + "   expiry_time = $5,"
           + "   max_inactive_interval = $6"
           + " WHERE id = $1;";
+
   public static final String SELECT_STATEMENT =
       "SELECT "
           + " id, session_id, session_data, creation_time,"
