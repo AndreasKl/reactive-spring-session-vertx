@@ -61,6 +61,15 @@ public class ReactivePostgresSessionRepository
           + "   max_inactive_interval = $6"
           + " WHERE id = $1;";
 
+  public static final String MINIMAL_UPDATE_STATEMENT =
+      "UPDATE session "
+          + " SET "
+          + "   session_id = $2,"
+          + "   last_accessed_time = $3,"
+          + "   expiry_time = $4,"
+          + "   max_inactive_interval = $5"
+          + " WHERE id = $1;";
+
   public static final String SELECT_STATEMENT =
       "SELECT "
           + " id, session_id, session_data, creation_time,"
@@ -93,7 +102,11 @@ public class ReactivePostgresSessionRepository
 
   @Override
   public Mono<Void> save(PostgresSession postgresSession) {
-    return postgresSession.isNew ? insertSession(postgresSession) : updateSession(postgresSession);
+    return Mono.defer(
+        () ->
+            postgresSession.isNew
+                ? insertSession(postgresSession)
+                : updateSession(postgresSession));
   }
 
   private Mono<Void> insertSession(PostgresSession postgresSession) {
@@ -118,25 +131,50 @@ public class ReactivePostgresSessionRepository
   }
 
   private Mono<Void> updateSession(PostgresSession postgresSession) {
-    // FIXME: Optimize when no data was changed...
-    // Only update the last_accessed_time, expiry_time and max_inactive_interval
     return Mono.create(
         sink -> {
-          try {
-            pgPool.preparedQuery(
-                UPDATE_STATEMENT,
-                Tuple.of(
-                    postgresSession.internalPrimaryKey,
-                    postgresSession.getId(),
-                    Buffer.buffer(sessionDataAsBytes(postgresSession)),
-                    postgresSession.getLastAccessedTime().toEpochMilli(),
-                    postgresSession.getExpiryTime().toEpochMilli(),
-                    (int) postgresSession.getMaxInactiveInterval().getSeconds()),
-                asyncResult -> handleInsertOrUpdate(asyncResult, sink, postgresSession));
-          } catch (Exception ex) {
-            sink.error(ex);
+          if (postgresSession.isChanged()) {
+            updateSession(postgresSession, sink);
+          } else {
+            updateSessionWithoutSessionData(postgresSession, sink);
           }
         });
+  }
+
+  private void updateSession(PostgresSession postgresSession, MonoSink<Void> sink) {
+    try {
+      pgPool.preparedQuery(
+          UPDATE_STATEMENT,
+          Tuple.of(
+              postgresSession.internalPrimaryKey,
+              postgresSession.getId(),
+              Buffer.buffer(sessionDataAsBytes(postgresSession)),
+              postgresSession.getLastAccessedTime().toEpochMilli(),
+              postgresSession.getExpiryTime().toEpochMilli(),
+              (int) postgresSession.getMaxInactiveInterval().getSeconds()),
+          asyncResult -> handleInsertOrUpdate(asyncResult, sink, postgresSession));
+    } catch (Exception ex) {
+      sink.error(ex);
+    }
+  }
+
+  private void updateSessionWithoutSessionData(PostgresSession postgresSession, MonoSink<Void> sink) {
+    // TODO: Possible optimization, do not update the session when there is plenty of
+    // time; the session might end a few seconds earlier (which would be barely noticeable) in trade
+    // of updating only once in a while.
+    try {
+      pgPool.preparedQuery(
+          MINIMAL_UPDATE_STATEMENT,
+          Tuple.of(
+              postgresSession.internalPrimaryKey,
+              postgresSession.getId(),
+              postgresSession.getLastAccessedTime().toEpochMilli(),
+              postgresSession.getExpiryTime().toEpochMilli(),
+              (int) postgresSession.getMaxInactiveInterval().getSeconds()),
+          asyncResult -> handleInsertOrUpdate(asyncResult, sink, postgresSession));
+    } catch (Exception ex) {
+      sink.error(ex);
+    }
   }
 
   private void handleInsertOrUpdate(
@@ -195,18 +233,20 @@ public class ReactivePostgresSessionRepository
 
   @Override
   public Mono<Void> deleteById(String id) {
-    return Mono.create(
-        sink ->
-            pgPool.preparedQuery(
-                "DELETE FROM session WHERE session_id = $1;",
-                Tuple.of(id),
-                t -> {
-                  if (t.succeeded()) {
-                    sink.success();
-                    return;
-                  }
-                  sink.error(t.cause());
-                }));
+    return Mono.defer(
+        () ->
+            Mono.create(
+                sink ->
+                    pgPool.preparedQuery(
+                        "DELETE FROM session WHERE session_id = $1;",
+                        Tuple.of(id),
+                        t -> {
+                          if (t.succeeded()) {
+                            sink.success();
+                            return;
+                          }
+                          sink.error(t.cause());
+                        })));
   }
 
   private byte[] sessionDataAsBytes(PostgresSession postgresSession) {
