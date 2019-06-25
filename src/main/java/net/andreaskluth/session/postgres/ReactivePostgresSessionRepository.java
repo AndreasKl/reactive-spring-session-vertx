@@ -1,4 +1,4 @@
-package net.andreaskluth.net.andreaskluth.session.postgres;
+package net.andreaskluth.session.postgres;
 
 import static java.util.Objects.requireNonNull;
 
@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import net.andreaskluth.net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
+import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
 import org.springframework.session.ReactiveSessionRepository;
 import org.springframework.session.Session;
 import reactor.core.publisher.Mono;
