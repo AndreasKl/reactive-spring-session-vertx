@@ -1,4 +1,4 @@
-package net.andreaskluth.net.andreaskluth.session.postgres;
+package net.andreaskluth.session.postgres;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

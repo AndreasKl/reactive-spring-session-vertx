@@ -1,5 +1,6 @@
-package net.andreaskluth.net.andreaskluth.session.postgres;
+package net.andreaskluth.session.postgres;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
@@ -7,13 +8,20 @@ import com.opentable.db.postgres.junit.PreparedDbRule;
 import io.reactiverse.pgclient.PgClient;
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgPoolOptions;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.time.Clock;
+import java.time.Instant;
+import java.util.Objects;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.springframework.util.StreamUtils;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,21 +34,11 @@ public class ReactivePostgresSessionRepositoryTest {
       EmbeddedPostgresRules.preparedDatabase(
           ds -> {
             try (Connection connection = ds.getConnection();
-                Statement statement = connection.createStatement(); ) {
-              statement.execute(
-                  "CREATE TABLE session"
-                      + " ( "
-                      + "   id UUID PRIMARY KEY,"
-                      + "   session_id text NOT NULL,"
-                      + "   session_data bytea,"
-                      + "   creation_time INT8 NOT NULL,"
-                      + "   last_accessed_time INT8  NOT NULL,"
-                      + "   expiry_time INT8 NOT NULL,"
-                      + "   max_inactive_interval INT4 NOT NULL"
-                      + " );");
-              statement.execute("CREATE INDEX session_session_id_idx ON session (session_id);");
-              statement.execute(
-                  "CREATE INDEX session_expiry_time_idx ON session (expiry_time) WHERE expiry_time >= 0;");
+                Statement statement = connection.createStatement()) {
+              String[] sqlStatements = parseStatementsFromSchema();
+              for (String sqlStatement : sqlStatements) {
+                statement.execute(sqlStatement);
+              }
             }
           });
 
@@ -106,6 +104,20 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
+  public void storeComplexObjectsInSession() {
+    var repo = sessionRepository();
+    var session = repo.createSession().block();
+
+    session.setAttribute("key", new Complex(Instant.MAX));
+
+    repo.save(session).block();
+
+    var reloadedSession = repo.findById(session.getId()).block();
+
+    assertThat(reloadedSession.<Complex>getAttribute("key")).isEqualTo(new Complex(Instant.MAX));
+  }
+
+  @Test
   public void savingMultipleTimes() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
@@ -152,7 +164,6 @@ public class ReactivePostgresSessionRepositoryTest {
 
     var loadedSession = repo.findById(session.getId()).block();
     assertThat(loadedSession).isNull();
-
   }
 
   @Test
@@ -186,5 +197,48 @@ public class ReactivePostgresSessionRepositoryTest {
             .setPassword("postgres")
             .setMaxSize(5);
     return PgClient.pool(options);
+  }
+
+  private static String[] parseStatementsFromSchema() {
+    try (InputStream schemaStream =
+        ReactivePostgresSessionRepositoryTest.class
+            .getClassLoader()
+            .getResourceAsStream("schema.sql")) {
+      return StringUtils.split(StreamUtils.copyToString(schemaStream, UTF_8), ";");
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to read schema.sql.", e);
+    }
+  }
+
+  private static class Complex implements Serializable {
+
+    private static final long serialVersionUID = 1;
+
+    private final Instant instant;
+
+    private Complex(Instant instant) {
+      this.instant = instant;
+    }
+
+    public Instant getInstant() {
+      return instant;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Complex complex = (Complex) o;
+      return Objects.equals(instant, complex.instant);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(instant);
+    }
   }
 }

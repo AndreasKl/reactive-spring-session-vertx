@@ -1,4 +1,4 @@
-package net.andreaskluth.net.andreaskluth.session.postgres;
+package net.andreaskluth.session.postgres;
 
 import static java.util.Objects.requireNonNull;
 
@@ -6,24 +6,29 @@ import io.reactiverse.pgclient.PgClient;
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgPoolOptions;
 import java.time.Clock;
+import java.util.Optional;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+import reactor.core.scheduler.Schedulers;
 
 @Configuration
 @EnableScheduling
 public class ReactivePostgresSessionConfiguration implements SchedulingConfigurer {
 
   public static final String DEFAULT_CLEANUP_CRON = "0 * * * * *";
+
   private final Clock clock;
+  private final PgPoolOptions pgPoolOptions;
 
   private String cleanupCron = DEFAULT_CLEANUP_CRON;
 
-  public ReactivePostgresSessionConfiguration(Clock clock) {
-    // FIXME: Provide clock if none is configured as bean.
-    this.clock = requireNonNull(clock, "clock must not be null");
+  public ReactivePostgresSessionConfiguration(PgPoolOptions pgPoolOptions, Optional<Clock> clock) {
+    this.pgPoolOptions = requireNonNull(pgPoolOptions, "pgPoolOptions must not be null");
+    this.clock =
+        requireNonNull(clock, "clock must not be null").orElseGet(Clock::systemDefaultZone);
   }
 
   public void setCleanupCron(String cleanupCron) {
@@ -42,16 +47,7 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
 
   @Bean
   public PgPool pgPool() {
-    // FIXME: Provide config object.
-    PgPoolOptions options =
-        new PgPoolOptions()
-            .setPort(5432)
-            .setHost("localhost")
-            .setDatabase("template1")
-            .setUser("postgres")
-            .setPassword("postgres")
-            .setMaxSize(5);
-    return PgClient.pool(options);
+    return PgClient.pool(pgPoolOptions);
   }
 
   @Bean
@@ -66,7 +62,11 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
   @Override
   public void configureTasks(ScheduledTaskRegistrar scheduledTaskRegistrar) {
     scheduledTaskRegistrar.addCronTask(
-        () -> reactivePostgresSessionRepository().cleanupExpiredSessions().block(),
+        () ->
+            reactivePostgresSessionRepository()
+                .cleanupExpiredSessions()
+                .subscribeOn(Schedulers.immediate())
+                .subscribe(),
         this.cleanupCron);
   }
 }
