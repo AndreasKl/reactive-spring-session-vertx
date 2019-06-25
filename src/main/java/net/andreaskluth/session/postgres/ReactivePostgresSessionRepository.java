@@ -228,9 +228,7 @@ public class ReactivePostgresSessionRepository
                         sink.error(ex);
                       }
                     } else {
-                      sink.error(
-                          new RuntimeException(
-                              "SQLStatement did not return the expected row count."));
+                      sink.success(null);
                     }
                     return;
                   }
