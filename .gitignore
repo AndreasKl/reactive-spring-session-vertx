@@ -24,7 +24,7 @@ hs_err_pid*
 
 # IDEA
 .idea/
-reactive-spring-session-postgres.iml
+*.iml
 
 # Maven
 target/
