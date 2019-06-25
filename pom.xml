@@ -16,8 +16,8 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
 
-    <spring-webflux.version>5.1.8.RELEASE</spring-webflux.version>
-    <spring-session-data-redis.version>2.1.7.RELEASE</spring-session-data-redis.version>
+    <spring.version>5.1.8.RELEASE</spring.version>
+    <spring-session-core.version>2.1.7.RELEASE</spring-session-core.version>
     <reactive-pg-client.version>0.11.4</reactive-pg-client.version>
     <otj-pg-embedded.version>0.13.1</otj-pg-embedded.version>
     <junit.version>4.13-beta-3</junit.version>
@@ -30,18 +30,29 @@
     <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
     <nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.4</jacoco-maven-plugin.version>
+    <fmt-maven-plugin.version>2.9</fmt-maven-plugin.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+      <version>${spring.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <version>${spring.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
       <artifactId>spring-webflux</artifactId>
-      <version>${spring-webflux.version}</version>
+      <version>${spring.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.session</groupId>
-      <artifactId>spring-session-data-redis</artifactId>
-      <version>${spring-session-data-redis.version}</version>
+      <artifactId>spring-session-core</artifactId>
+      <version>${spring-session-core.version}</version>
     </dependency>
     <dependency>
       <groupId>io.reactiverse</groupId>
@@ -97,6 +108,18 @@
             <phase>test</phase>
             <goals>
               <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.coveo</groupId>
+        <artifactId>fmt-maven-plugin</artifactId>
+        <version>${fmt-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
             </goals>
           </execution>
         </executions>
