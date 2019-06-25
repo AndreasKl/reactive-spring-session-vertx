@@ -3,12 +3,14 @@ package net.andreaskluth.reactivesession
 import io.reactiverse.pgclient.PgClient
 import io.reactiverse.pgclient.PgPoolOptions
 import net.andreaskluth.session.postgres.DeserializationStrategy
+import net.andreaskluth.session.postgres.ReactivePostgresSessionConfiguration
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository
 import net.andreaskluth.session.postgres.SerializationStrategy
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
 import org.springframework.http.ResponseEntity
 import org.springframework.session.ReactiveSessionRepository
 import org.springframework.session.Session
@@ -22,6 +24,7 @@ import reactor.core.publisher.Mono
 import java.time.Clock
 
 @SpringBootApplication
+@Import(ReactivePostgresSessionConfiguration::class)
 class PostgresSessionDemoApplication
 
 @Configuration
@@ -39,18 +42,6 @@ class PostgresSessionConfiguration {
     @Bean
     fun clock(): Clock =
             Clock.systemUTC()
-
-    @Bean
-    fun reactivePostgresSessionRepository(): ReactiveSessionRepository<out Session> {
-        val sessionRepository =
-                ReactivePostgresSessionRepository(
-                        PgClient.pool(pgPoolOptions()),
-                        SerializationStrategy(),
-                        DeserializationStrategy(),
-                        clock())
-        sessionRepository.setDefaultMaxInactiveInterval(60)
-        return sessionRepository
-    }
 
     @Bean(WebHttpHandlerBuilder.WEB_SESSION_MANAGER_BEAN_NAME)
     fun webSessionManager(repository: ReactiveSessionRepository<out Session>): WebSessionManager {

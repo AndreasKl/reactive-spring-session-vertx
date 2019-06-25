@@ -52,12 +52,6 @@
 			<groupId>net.andreaskluth</groupId>
 			<artifactId>reactive-spring-session-postgres</artifactId>
 			<version>1.0-SNAPSHOT</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.session</groupId>
-					<artifactId>spring-session-data-redis</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<dependency>
