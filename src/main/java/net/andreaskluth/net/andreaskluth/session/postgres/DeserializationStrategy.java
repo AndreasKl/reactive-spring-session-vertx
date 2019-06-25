@@ -3,6 +3,7 @@ package net.andreaskluth.net.andreaskluth.session.postgres;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 public class DeserializationStrategy {

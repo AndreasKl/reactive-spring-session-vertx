@@ -39,6 +39,8 @@ public class ReactivePostgresSessionRepositoryTest {
                       + "   max_inactive_interval INT4 NOT NULL"
                       + " );");
               statement.execute("CREATE INDEX session_session_id_idx ON session (session_id);");
+              statement.execute(
+                  "CREATE INDEX session_expiry_time_idx ON session (expiry_time) WHERE expiry_time >= 0;");
             }
           });
 
@@ -137,6 +139,33 @@ public class ReactivePostgresSessionRepositoryTest {
     var reloadedSession = repo.findById(session.getId()).block();
     assertThat(reloadedSession.<String>getAttribute("keyA")).isEqualTo("value A");
     assertThat(reloadedSession.<String>getAttribute("keyB")).isEqualTo("value B");
+  }
+
+  @Test
+  public void expiredSessionsCanNotBeRetrieved() {
+    var repo = sessionRepository();
+    repo.setDefaultMaxInactiveInterval(0);
+
+    var session = repo.createSession().block();
+    repo.save(session).block();
+    assertThat(session.isExpired()).isTrue();
+
+    var loadedSession = repo.findById(session.getId()).block();
+    assertThat(loadedSession).isNull();
+
+  }
+
+  @Test
+  public void expiredSessionsArePurgedByCleanup() {
+    var repo = sessionRepository();
+    repo.setDefaultMaxInactiveInterval(0);
+
+    var session = repo.createSession().block();
+    repo.save(session).block();
+
+    Integer count = repo.cleanupExpiredSessions().block();
+
+    assertThat(count).isGreaterThan(0);
   }
 
   private ReactivePostgresSessionRepository sessionRepository() {

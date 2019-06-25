@@ -27,7 +27,7 @@ import reactor.core.publisher.MonoSink;
 public class ReactivePostgresSessionRepository
     implements ReactiveSessionRepository<PostgresSession> {
 
-  private static final int DEFAULT_MAX_INACTIVE_INTERVAL_SECONDS = 1800;
+  private static final Duration DEFAULT_MAX_INACTIVE_INTERVAL = Duration.ofSeconds(1800);
 
   public static final String INSERT_STATEMENT =
       "INSERT INTO session "
@@ -76,11 +76,17 @@ public class ReactivePostgresSessionRepository
           + " last_accessed_time, max_inactive_interval "
           + "FROM session WHERE session_id = $1;";
 
+  public static final String DELETE_FROM_SESSION_QUERY =
+      "DELETE FROM session WHERE session_id = $1 RETURNING *;";
+
+  public static final String DELETE_EXPIRED_SESSIONS_QUERY =
+      "DELETE FROM session WHERE expiry_time < $1 AND max_inactive_interval >= 0;";
+
   private final PgPool pgPool;
   private final SerializationStrategy serializationStrategy;
   private final DeserializationStrategy deserializationStrategy;
   private final Clock clock;
-  private Duration maxInactiveInterval = Duration.ofSeconds(DEFAULT_MAX_INACTIVE_INTERVAL_SECONDS);
+  private Duration defaultMaxInactiveInterval = DEFAULT_MAX_INACTIVE_INTERVAL;
 
   public ReactivePostgresSessionRepository(
       PgPool pgPool,
@@ -93,6 +99,18 @@ public class ReactivePostgresSessionRepository
     this.deserializationStrategy =
         requireNonNull(deserializationStrategy, "deserializationStrategy must not be null");
     this.clock = requireNonNull(clock, "clock must not be null");
+  }
+
+  /**
+   * Sets the maximum inactive interval in seconds between requests before newly created sessions
+   * will be invalidated. A negative time indicates that the session will never timeout. The default
+   * is 1800 (30 minutes).
+   *
+   * @param defaultMaxInactiveInterval the number of seconds that the {@link Session} should be kept
+   *     alive between client requests.
+   */
+  public void setDefaultMaxInactiveInterval(int defaultMaxInactiveInterval) {
+    this.defaultMaxInactiveInterval = Duration.ofSeconds(defaultMaxInactiveInterval);
   }
 
   @Override
@@ -118,7 +136,7 @@ public class ReactivePostgresSessionRepository
                 Tuple.of(
                     postgresSession.internalPrimaryKey,
                     postgresSession.getId(),
-                    Buffer.buffer(sessionDataAsBytes(postgresSession)),
+                    sessionDataAsByteBuffer(postgresSession),
                     postgresSession.getCreationTime().toEpochMilli(),
                     postgresSession.getLastAccessedTime().toEpochMilli(),
                     postgresSession.getExpiryTime().toEpochMilli(),
@@ -148,7 +166,7 @@ public class ReactivePostgresSessionRepository
           Tuple.of(
               postgresSession.internalPrimaryKey,
               postgresSession.getId(),
-              Buffer.buffer(sessionDataAsBytes(postgresSession)),
+              sessionDataAsByteBuffer(postgresSession),
               postgresSession.getLastAccessedTime().toEpochMilli(),
               postgresSession.getExpiryTime().toEpochMilli(),
               (int) postgresSession.getMaxInactiveInterval().getSeconds()),
@@ -158,7 +176,8 @@ public class ReactivePostgresSessionRepository
     }
   }
 
-  private void updateSessionWithoutSessionData(PostgresSession postgresSession, MonoSink<Void> sink) {
+  private void updateSessionWithoutSessionData(
+      PostgresSession postgresSession, MonoSink<Void> sink) {
     // TODO: Possible optimization, do not update the session when there is plenty of
     // time; the session might end a few seconds earlier (which would be barely noticeable) in trade
     // of updating only once in a while.
@@ -220,8 +239,12 @@ public class ReactivePostgresSessionRepository
   }
 
   private PostgresSession mapRowToPostgresSession(Row row) {
+    Buffer sessionDataBuffer = row.getBuffer("session_data");
     Map<String, Object> sessionData =
-        deserializationStrategy.deserialize(row.getBuffer("session_data").getBytes());
+        sessionDataBuffer == null
+            ? new HashMap<>()
+            : deserializationStrategy.deserialize(sessionDataBuffer.getBytes());
+
     return new PostgresSession(
         row.getUUID("id"),
         row.getString("session_id"),
@@ -238,7 +261,7 @@ public class ReactivePostgresSessionRepository
             Mono.create(
                 sink ->
                     pgPool.preparedQuery(
-                        "DELETE FROM session WHERE session_id = $1;",
+                        DELETE_FROM_SESSION_QUERY,
                         Tuple.of(id),
                         t -> {
                           if (t.succeeded()) {
@@ -249,8 +272,28 @@ public class ReactivePostgresSessionRepository
                         })));
   }
 
-  private byte[] sessionDataAsBytes(PostgresSession postgresSession) {
-    return serializationStrategy.serialize(postgresSession.sessionData);
+  public Mono<Integer> cleanupExpiredSessions() {
+    return Mono.defer(
+        () ->
+            Mono.create(
+                sink ->
+                    pgPool.preparedQuery(
+                        DELETE_EXPIRED_SESSIONS_QUERY,
+                        Tuple.of(clock.millis()),
+                        t -> {
+                          if (t.succeeded()) {
+                            sink.success(t.result().rowCount());
+                            return;
+                          }
+                          sink.error(t.cause());
+                        })));
+  }
+
+  private Buffer sessionDataAsByteBuffer(PostgresSession postgresSession) {
+    if (postgresSession.sessionData.isEmpty()) {
+      return null;
+    }
+    return Buffer.buffer(serializationStrategy.serialize(postgresSession.sessionData));
   }
 
   final class PostgresSession implements Session {
@@ -272,7 +315,7 @@ public class ReactivePostgresSessionRepository
       this.sessionData = new HashMap<>();
       this.creationTime = ReactivePostgresSessionRepository.this.clock.instant();
       this.lastAccessedTime = ReactivePostgresSessionRepository.this.clock.instant();
-      this.maxInactiveInterval = ReactivePostgresSessionRepository.this.maxInactiveInterval;
+      this.maxInactiveInterval = ReactivePostgresSessionRepository.this.defaultMaxInactiveInterval;
       this.isNew = true;
     }
 
