@@ -65,5 +65,5 @@ mvn -P release -pl reactive-spring-session-postgres clean deploy
 ```
 
 
-# Licence 
-Apache Licence 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+# License 
+Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
