@@ -18,7 +18,7 @@ and a scheduled task that removes expired sessions from the database. Expired se
 are never returned to the user, however could remain in the database until the scheduler
 does the cleanup.
 
-```$kotlin
+```kotlin
 @Configuration
 @Import(ReactivePostgresSessionConfiguration::class)
 class PostgresSessionConfiguration {
@@ -51,6 +51,19 @@ class PostgresSessionConfiguration {
 
 ## Development State
 tomatenmark is currently under development and probably not production ready.
+
+## Build
+
+Just test and build:
+```bash
+mvn clean verify
+```
+
+Deploy the current SNAPSHOT to **oss.sonatype.org**:
+```bash
+mvn -P release -pl reactive-spring-session-postgres clean deploy
+```
+
 
 # Licence 
 Apache Licence 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
