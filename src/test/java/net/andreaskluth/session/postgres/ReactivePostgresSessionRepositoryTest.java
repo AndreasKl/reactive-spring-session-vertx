@@ -1,44 +1,42 @@
 package net.andreaskluth.session.postgres;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
 import com.opentable.db.postgres.junit.PreparedDbRule;
 import io.reactiverse.pgclient.PgClient;
+import io.reactiverse.pgclient.PgException;
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgPoolOptions;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.sql.Statement;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Objects;
+import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
+import net.andreaskluth.session.postgres.support.SqlSchemaLoader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.springframework.util.StreamUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ReactivePostgresSessionRepositoryTest {
 
+  private static final String KEY = "key";
+  private static final String VALUE = "value";
   private PgPool pgPool = null;
 
   @ClassRule
   public static final PreparedDbRule embeddedPostgres =
       EmbeddedPostgresRules.preparedDatabase(
           ds -> {
-            try (Connection connection = ds.getConnection();
-                Statement statement = connection.createStatement()) {
-              String[] sqlStatements = parseStatementsFromSchema();
-              for (String sqlStatement : sqlStatements) {
-                statement.execute(sqlStatement);
-              }
+            try (Connection connection = ds.getConnection()) {
+              SqlSchemaLoader.applySchema(connection);
             }
           });
 
@@ -57,7 +55,7 @@ public class ReactivePostgresSessionRepositoryTest {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
-    session.setAttribute("key", "value");
+    session.setAttribute(KEY, VALUE);
 
     var sessionId = session.getId();
 
@@ -66,13 +64,72 @@ public class ReactivePostgresSessionRepositoryTest {
     var loadedSession = repo.findById(sessionId).block();
 
     assertThat(loadedSession.getId()).isEqualTo(sessionId);
-    assertThat(loadedSession.<String>getAttribute("key")).isEqualTo("value");
+    assertThat(loadedSession.<String>getAttribute(KEY)).isEqualTo(VALUE);
   }
 
   @Test
-  public void rotateSessionId() {
+  public void duplicateSessionIdsAreNotPermitted() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
+    repo.save(session).block();
+
+    var anotherSession = repo.createSession().block();
+
+    setSessionId(anotherSession, session.getId());
+
+    assertThatThrownBy(() -> repo.save(anotherSession).block()).isInstanceOf(PgException.class);
+  }
+
+  @Test
+  public void saveAndLoadRemovingAttributes() {
+    var repo = sessionRepository();
+
+    var session = repo.createSession().block();
+    session.setAttribute(KEY, VALUE);
+
+    repo.save(session).block();
+
+    var loadedSession = repo.findById(session.getId()).block();
+    loadedSession.removeAttribute(KEY);
+
+    repo.save(loadedSession).block();
+
+    var reloadedSession = repo.findById(session.getId()).block();
+
+    assertThat(reloadedSession.getId()).isEqualTo(session.getId());
+    assertThat(loadedSession.<String>getAttribute(KEY)).isNull();
+  }
+
+  @Test
+  public void findUnknownSessionIdShouldReturnNull() {
+    var repo = sessionRepository();
+    PostgresSession session = repo.findById("unknown").block();
+    assertThat(session).isNull();
+  }
+
+  @Test
+  public void deleteSessionById() {
+    var repo = sessionRepository();
+    var session = repo.createSession().block();
+    repo.save(session).block();
+
+    repo.deleteById(session.getId()).block();
+
+    var loadedSession = repo.findById(session.getId()).block();
+    assertThat(loadedSession).isNull();
+  }
+
+  @Test
+  public void deleteSessionByIdWithUnknownSessionIdShouldNotCauseAnError() {
+    var repo = sessionRepository();
+    repo.deleteById("unknown").block();
+  }
+
+  @Test
+  public void rotateSessionIdChangesSessionId() {
+    var repo = sessionRepository();
+    var session = repo.createSession().block();
+    session.setAttribute(KEY, VALUE);
 
     var sessionId = session.getId();
     String changedSessionId = session.changeSessionId();
@@ -83,24 +140,25 @@ public class ReactivePostgresSessionRepositoryTest {
 
     assertThat(sessionId).isNotEqualTo(changedSessionId);
     assertThat(loadedSession.getId()).isEqualTo(changedSessionId);
+    assertThat(loadedSession.<String>getAttribute(KEY)).isEqualTo(VALUE);
   }
 
   @Test
-  public void updatingValuesInASession() {
+  public void updatingValuesInSession() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
-    session.setAttribute("key", "value");
+    session.setAttribute(KEY, VALUE);
 
     repo.save(session).block();
 
     var reloadedSession = repo.findById(session.getId()).block();
 
-    reloadedSession.setAttribute("key", "another value");
+    reloadedSession.setAttribute(KEY, "another value");
 
     repo.save(reloadedSession).block();
 
-    assertThat(reloadedSession.<String>getAttribute("key")).isEqualTo("another value");
+    assertThat(reloadedSession.<String>getAttribute(KEY)).isEqualTo("another value");
   }
 
   @Test
@@ -108,13 +166,13 @@ public class ReactivePostgresSessionRepositoryTest {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
-    session.setAttribute("key", new Complex(Instant.MAX));
+    session.setAttribute(KEY, new Complex(Instant.MAX));
 
     repo.save(session).block();
 
     var reloadedSession = repo.findById(session.getId()).block();
 
-    assertThat(reloadedSession.<Complex>getAttribute("key")).isEqualTo(new Complex(Instant.MAX));
+    assertThat(reloadedSession.<Complex>getAttribute(KEY)).isEqualTo(new Complex(Instant.MAX));
   }
 
   @Test
@@ -199,15 +257,10 @@ public class ReactivePostgresSessionRepositoryTest {
     return PgClient.pool(options);
   }
 
-  private static String[] parseStatementsFromSchema() {
-    try (InputStream schemaStream =
-        ReactivePostgresSessionRepositoryTest.class
-            .getClassLoader()
-            .getResourceAsStream("schema.sql")) {
-      return StringUtils.split(StreamUtils.copyToString(schemaStream, UTF_8), ";");
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to read schema.sql.", e);
-    }
+  private void setSessionId(PostgresSession anotherSession, String sessionId) {
+    Field sessionIdField = ReflectionUtils.findField(PostgresSession.class, "sessionId");
+    ReflectionUtils.makeAccessible(sessionIdField);
+    ReflectionUtils.setField(sessionIdField, anotherSession, sessionId);
   }
 
   private static class Complex implements Serializable {
