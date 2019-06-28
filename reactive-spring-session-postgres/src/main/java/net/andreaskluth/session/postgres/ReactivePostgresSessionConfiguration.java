@@ -7,6 +7,8 @@ import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgPoolOptions;
 import java.time.Clock;
 import java.util.Optional;
+import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
+import net.andreaskluth.session.postgres.serializer.SerializationStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -27,6 +29,9 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
 
   public ReactivePostgresSessionConfiguration(PgPoolOptions pgPoolOptions, Optional<Clock> clock) {
     this.pgPoolOptions = requireNonNull(pgPoolOptions, "pgPoolOptions must not be null");
+
+    // FIXME: Offer an option to disable the scheduled job, e.g. when you prefer to run a
+    // job directly on the db.
     this.clock =
         requireNonNull(clock, "clock must not be null").orElseGet(Clock::systemDefaultZone);
   }
@@ -36,13 +41,8 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
   }
 
   @Bean
-  public DeserializationStrategy reactivePostgresSessionDeserializationStrategy() {
-    return new DeserializationStrategy();
-  }
-
-  @Bean
-  public SerializationStrategy reactivePostgresSessionSerializationStrategy() {
-    return new SerializationStrategy();
+  public SerializationStrategy reactivePostgresSerializationStrategy() {
+    return new JdkSerializationStrategy();
   }
 
   @Bean
@@ -53,10 +53,7 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
   @Bean
   public ReactivePostgresSessionRepository reactivePostgresSessionRepository() {
     return new ReactivePostgresSessionRepository(
-        pgPool(),
-        reactivePostgresSessionSerializationStrategy(),
-        reactivePostgresSessionDeserializationStrategy(),
-        clock);
+        pgPool(), reactivePostgresSerializationStrategy(), clock);
   }
 
   @Override

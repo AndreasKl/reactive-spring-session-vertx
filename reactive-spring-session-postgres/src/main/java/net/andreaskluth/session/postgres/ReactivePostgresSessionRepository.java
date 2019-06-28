@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
+import net.andreaskluth.session.postgres.serializer.SerializationStrategy;
 import org.springframework.session.ReactiveSessionRepository;
 import org.springframework.session.Session;
 import reactor.core.publisher.Mono;
@@ -84,20 +85,14 @@ public class ReactivePostgresSessionRepository
 
   private final PgPool pgPool;
   private final SerializationStrategy serializationStrategy;
-  private final DeserializationStrategy deserializationStrategy;
   private final Clock clock;
   private Duration defaultMaxInactiveInterval = DEFAULT_MAX_INACTIVE_INTERVAL;
 
   public ReactivePostgresSessionRepository(
-      PgPool pgPool,
-      SerializationStrategy serializationStrategy,
-      DeserializationStrategy deserializationStrategy,
-      Clock clock) {
+      PgPool pgPool, SerializationStrategy serializationStrategy, Clock clock) {
     this.pgPool = requireNonNull(pgPool, "pgPool must not be null");
     this.serializationStrategy =
         requireNonNull(serializationStrategy, "serializationStrategy must not be null");
-    this.deserializationStrategy =
-        requireNonNull(deserializationStrategy, "deserializationStrategy must not be null");
     this.clock = requireNonNull(clock, "clock must not be null");
   }
 
@@ -241,7 +236,7 @@ public class ReactivePostgresSessionRepository
     Map<String, Object> sessionData =
         sessionDataBuffer == null
             ? new HashMap<>()
-            : deserializationStrategy.deserialize(sessionDataBuffer.getBytes());
+            : serializationStrategy.deserialize(sessionDataBuffer.getBytes());
 
     return new PostgresSession(
         row.getUUID("id"),

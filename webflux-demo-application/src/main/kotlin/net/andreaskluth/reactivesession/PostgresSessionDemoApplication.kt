@@ -1,11 +1,7 @@
 package net.andreaskluth.reactivesession
 
-import io.reactiverse.pgclient.PgClient
 import io.reactiverse.pgclient.PgPoolOptions
-import net.andreaskluth.session.postgres.DeserializationStrategy
 import net.andreaskluth.session.postgres.ReactivePostgresSessionConfiguration
-import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository
-import net.andreaskluth.session.postgres.SerializationStrategy
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean

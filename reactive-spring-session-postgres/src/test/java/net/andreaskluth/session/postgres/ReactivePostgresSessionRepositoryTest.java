@@ -16,6 +16,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Objects;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
+import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
 import net.andreaskluth.session.postgres.support.SqlSchemaLoader;
 import org.junit.After;
 import org.junit.Before;
@@ -239,10 +240,7 @@ public class ReactivePostgresSessionRepositoryTest {
 
   private ReactivePostgresSessionRepository sessionRepository() {
     return new ReactivePostgresSessionRepository(
-        pgPool,
-        new SerializationStrategy(),
-        new DeserializationStrategy(),
-        Clock.systemDefaultZone());
+        pgPool, new JdkSerializationStrategy(), Clock.systemDefaultZone());
   }
 
   private PgPool pool() {
