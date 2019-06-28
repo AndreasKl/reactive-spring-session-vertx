@@ -1,20 +1,9 @@
-package net.andreaskluth.session.postgres;
+package net.andreaskluth.session.postgres.serializer;
 
-import static org.assertj.core.api.Assertions.assertThat;
+public class JdkSerializationStrategyTest extends TestSerializationStrategyBase {
 
-import java.util.Map;
-import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
-import org.junit.Test;
-
-public class JdkSerializationJdkSerializationStrategyTest {
-
-  @Test
-  public void serializesAndDeserializes() {
-    var serializationStrategy = new JdkSerializationStrategy();
-
-    var serialized = serializationStrategy.serialize(Map.of("test", "data"));
-    var deserialized = serializationStrategy.deserialize(serialized);
-
-    assertThat(deserialized.get("test")).isEqualTo("data");
+  @Override
+  SerializationStrategy strategy() {
+    return new JdkSerializationStrategy();
   }
 }
