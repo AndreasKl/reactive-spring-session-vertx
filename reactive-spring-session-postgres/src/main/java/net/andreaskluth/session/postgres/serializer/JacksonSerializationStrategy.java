@@ -62,8 +62,7 @@ public class JacksonSerializationStrategy implements SerializationStrategy {
     try {
       return objectMapper.readValue(input, stringObjectMapTypeRef);
     } catch (IOException e) {
-      // FIXME: Add application specific exception.
-      throw new RuntimeException(e);
+      throw new DeserializationException(e);
     }
   }
 
@@ -73,8 +72,7 @@ public class JacksonSerializationStrategy implements SerializationStrategy {
     try {
       return objectMapper.writeValueAsBytes(input);
     } catch (JsonProcessingException e) {
-      // FIXME: Add application specific exception.
-      throw new RuntimeException(e);
+      throw new SerializationException(e);
     }
   }
 }

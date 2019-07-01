@@ -7,13 +7,13 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import net.andreaskluth.session.postgres.ReactivePostgresSessionRepositoryTest;
+import net.andreaskluth.session.postgres.ReactivePostgresSessionException;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 
-public class SqlSchemaLoader {
+public class ReactivePostgresSessionSchemaPopulator {
 
-  private SqlSchemaLoader() {
+  private ReactivePostgresSessionSchemaPopulator() {
     // Construction is not permitted.
   }
 
@@ -27,12 +27,12 @@ public class SqlSchemaLoader {
 
   public static String[] parseStatementsFromSchema() {
     try (InputStream schemaStream =
-        ReactivePostgresSessionRepositoryTest.class
+        ReactivePostgresSessionSchemaPopulator.class
             .getClassLoader()
             .getResourceAsStream("schema.sql")) {
       return StringUtils.split(StreamUtils.copyToString(schemaStream, UTF_8), ";");
     } catch (IOException e) {
-      throw new RuntimeException("Failed to read schema.sql.", e);
+      throw new ReactivePostgresSessionException("Failed to read schema.sql.", e);
     }
   }
 }

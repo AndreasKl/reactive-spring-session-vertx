@@ -21,8 +21,7 @@ public class JdkSerializationStrategy implements SerializationStrategy {
       var dataMap = (Map<String, Object>) ois.readObject();
       return dataMap;
     } catch (IOException | ClassNotFoundException e) {
-      // FIXME: Add application specific exception.
-      throw new RuntimeException(e);
+      throw new DeserializationException(e);
     }
   }
 
@@ -33,8 +32,7 @@ public class JdkSerializationStrategy implements SerializationStrategy {
       oos.writeObject(input);
       return baos.toByteArray();
     } catch (IOException e) {
-      // FIXME: Add application specific exception.
-      throw new RuntimeException(e);
+      throw new SerializationException(e);
     }
   }
 }

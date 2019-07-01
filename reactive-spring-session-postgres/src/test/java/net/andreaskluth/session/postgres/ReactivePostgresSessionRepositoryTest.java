@@ -17,7 +17,7 @@ import java.time.Instant;
 import java.util.Objects;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
 import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
-import net.andreaskluth.session.postgres.support.SqlSchemaLoader;
+import net.andreaskluth.session.postgres.support.ReactivePostgresSessionSchemaPopulator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -37,7 +37,7 @@ public class ReactivePostgresSessionRepositoryTest {
       EmbeddedPostgresRules.preparedDatabase(
           ds -> {
             try (Connection connection = ds.getConnection()) {
-              SqlSchemaLoader.applySchema(connection);
+              ReactivePostgresSessionSchemaPopulator.applySchema(connection);
             }
           });
 

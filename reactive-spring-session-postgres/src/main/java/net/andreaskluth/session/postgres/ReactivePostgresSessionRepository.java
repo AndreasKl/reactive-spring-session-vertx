@@ -28,8 +28,6 @@ import reactor.core.publisher.MonoSink;
 public class ReactivePostgresSessionRepository
     implements ReactiveSessionRepository<PostgresSession> {
 
-  private static final Duration DEFAULT_MAX_INACTIVE_INTERVAL = Duration.ofSeconds(1800);
-
   public static final String INSERT_STATEMENT =
       "INSERT INTO session "
           + " ("
@@ -86,8 +84,16 @@ public class ReactivePostgresSessionRepository
   private final PgPool pgPool;
   private final SerializationStrategy serializationStrategy;
   private final Clock clock;
-  private Duration defaultMaxInactiveInterval = DEFAULT_MAX_INACTIVE_INTERVAL;
+  private Duration defaultMaxInactiveInterval = Duration.ofSeconds(1800);
 
+  /**
+   * Creates a new instance.
+   *
+   * @param pgPool the database pool
+   * @param serializationStrategy the {@link SerializationStrategy} to read and write session data
+   *     with.
+   * @param clock the {@link Clock} to use
+   */
   public ReactivePostgresSessionRepository(
       PgPool pgPool, SerializationStrategy serializationStrategy, Clock clock) {
     this.pgPool = requireNonNull(pgPool, "pgPool must not be null");
@@ -173,9 +179,6 @@ public class ReactivePostgresSessionRepository
 
   private void updateSessionWithoutSessionData(
       PostgresSession postgresSession, MonoSink<Void> sink) {
-    // TODO: Possible optimization, do not update the session when there is plenty of
-    // time; the session might end a few seconds earlier (which would be barely noticeable) in trade
-    // of updating only once in a while.
     try {
       pgPool.preparedQuery(
           MINIMAL_UPDATE_STATEMENT,
@@ -198,7 +201,9 @@ public class ReactivePostgresSessionRepository
         postgresSession.clearChangeFlags();
         sink.success();
       } else {
-        sink.error(new RuntimeException("SQLStatement did not return the expected row count."));
+        sink.error(
+            new ReactivePostgresSessionException(
+                "SQLStatement did not return the expected row count."));
       }
       return;
     }

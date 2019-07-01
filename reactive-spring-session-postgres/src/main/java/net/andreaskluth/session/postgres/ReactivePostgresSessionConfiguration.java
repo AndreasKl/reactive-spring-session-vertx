@@ -25,19 +25,10 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
   private final Clock clock;
   private final PgPoolOptions pgPoolOptions;
 
-  private String cleanupCron = DEFAULT_CLEANUP_CRON;
-
   public ReactivePostgresSessionConfiguration(PgPoolOptions pgPoolOptions, Optional<Clock> clock) {
     this.pgPoolOptions = requireNonNull(pgPoolOptions, "pgPoolOptions must not be null");
-
-    // FIXME: Offer an option to disable the scheduled job, e.g. when you prefer to run a
-    // job directly on the db.
     this.clock =
         requireNonNull(clock, "clock must not be null").orElseGet(Clock::systemDefaultZone);
-  }
-
-  public void setCleanupCron(String cleanupCron) {
-    this.cleanupCron = cleanupCron;
   }
 
   @Bean
@@ -64,6 +55,6 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
                 .cleanupExpiredSessions()
                 .subscribeOn(Schedulers.immediate())
                 .subscribe(),
-        this.cleanupCron);
+        DEFAULT_CLEANUP_CRON);
   }
 }
