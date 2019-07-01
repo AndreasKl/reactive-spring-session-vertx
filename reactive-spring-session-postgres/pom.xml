@@ -7,11 +7,33 @@
 
   <groupId>net.andreaskluth</groupId>
   <artifactId>reactive-spring-session-postgres</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
 
   <name>reactive-spring-session-postgres</name>
   <description>Parent for reactive Spring Session repository for postgres</description>
   <url>https://github.com/AndreasKl/tomatenmark</url>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Andreas Kluth</name>
+      <email>mail@andreaskluth.net</email>
+      <organization>None</organization>
+      <organizationUrl>http://www.andreaskluth.net</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/AndreasKl/tomatenmark.git</connection>
+    <developerConnection>scm:git:ssh://github.com:AndreasKl/tomatenmark.git</developerConnection>
+    <url>http://github.com/AndreasKl/tomatenmark/tree/master</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
