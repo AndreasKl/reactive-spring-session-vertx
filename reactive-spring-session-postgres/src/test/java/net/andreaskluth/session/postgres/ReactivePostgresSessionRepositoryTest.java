@@ -37,7 +37,7 @@ public class ReactivePostgresSessionRepositoryTest {
       EmbeddedPostgresRules.preparedDatabase(
           ds -> {
             try (Connection connection = ds.getConnection()) {
-              ReactivePostgresSessionSchemaPopulator.applySchema(connection);
+              ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(connection);
             }
           });
 
