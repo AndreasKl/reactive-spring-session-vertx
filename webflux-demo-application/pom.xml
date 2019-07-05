@@ -21,6 +21,8 @@
     <maven.compiler.target>11</maven.compiler.target>
 
     <kotlin.version>1.2.71</kotlin.version>
+
+    <otj-pg-embedded.version>0.13.1</otj-pg-embedded.version>
   </properties>
 
   <dependencies>
@@ -55,7 +57,12 @@
     <dependency>
       <groupId>net.andreaskluth</groupId>
       <artifactId>reactive-spring-session-postgres</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.opentable.components</groupId>
+      <artifactId>otj-pg-embedded</artifactId>
+      <version>${otj-pg-embedded.version}</version>
     </dependency>
 
     <dependency>
