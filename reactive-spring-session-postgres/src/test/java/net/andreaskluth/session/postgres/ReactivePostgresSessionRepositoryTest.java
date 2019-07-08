@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.util.Objects;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
 import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
+import net.andreaskluth.session.postgres.serializer.SerializationException;
 import net.andreaskluth.session.postgres.support.ReactivePostgresSessionSchemaPopulator;
 import org.junit.After;
 import org.junit.Before;
@@ -177,6 +178,17 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
+  public void objectsThatAreNotSerializableShouldRaise() {
+    var repo = sessionRepository();
+    var session = repo.createSession().block();
+
+    session.setAttribute(KEY, new NotSerializable(Instant.MAX));
+
+    Mono<Void> save = repo.save(session);
+    assertThatThrownBy(save::block).isInstanceOf(SerializationException.class);
+  }
+
+  @Test
   public void savingMultipleTimes() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
@@ -259,6 +271,15 @@ public class ReactivePostgresSessionRepositoryTest {
     Field sessionIdField = ReflectionUtils.findField(PostgresSession.class, "sessionId");
     ReflectionUtils.makeAccessible(sessionIdField);
     ReflectionUtils.setField(sessionIdField, anotherSession, sessionId);
+  }
+
+  private static class NotSerializable {
+
+    private final Instant instant;
+
+    private NotSerializable(Instant instant) {
+      this.instant = instant;
+    }
   }
 
   private static class Complex implements Serializable {
