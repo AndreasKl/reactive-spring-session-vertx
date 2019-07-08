@@ -1,6 +1,12 @@
 package net.andreaskluth.session.postgres;
 
 import static java.util.Objects.requireNonNull;
+import static net.andreaskluth.session.postgres.ReactivePostgresSessionRepositoryQueries.DELETE_EXPIRED_SESSIONS_SQL;
+import static net.andreaskluth.session.postgres.ReactivePostgresSessionRepositoryQueries.DELETE_FROM_SESSION_SQL;
+import static net.andreaskluth.session.postgres.ReactivePostgresSessionRepositoryQueries.INSERT_SQL;
+import static net.andreaskluth.session.postgres.ReactivePostgresSessionRepositoryQueries.REDUCED_UPDATE_SQL;
+import static net.andreaskluth.session.postgres.ReactivePostgresSessionRepositoryQueries.SELECT_SQL;
+import static net.andreaskluth.session.postgres.ReactivePostgresSessionRepositoryQueries.UPDATE_SQL;
 
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgResult;
@@ -15,7 +21,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
@@ -24,65 +29,13 @@ import org.springframework.session.ReactiveSessionRepository;
 import org.springframework.session.Session;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
+import reactor.core.publisher.SynchronousSink;
 
 /**
  * A {@link ReactiveSessionRepository} that is implemented using vert.x reactive postgres client.
  */
 public class ReactivePostgresSessionRepository
     implements ReactiveSessionRepository<PostgresSession> {
-
-  public static final String INSERT_STATEMENT =
-      "INSERT INTO session "
-          + " ("
-          + "   id,"
-          + "   session_id,"
-          + "   session_data,"
-          + "   creation_time,"
-          + "   last_accessed_time,"
-          + "   expiry_time,"
-          + "   max_inactive_interval"
-          + " ) "
-          + " VALUES "
-          + " ("
-          + "   $1,"
-          + "   $2,"
-          + "   $3,"
-          + "   $4,"
-          + "   $5,"
-          + "   $6,"
-          + "   $7"
-          + " );";
-
-  public static final String UPDATE_STATEMENT =
-      "UPDATE session "
-          + " SET "
-          + "   session_id = $2,"
-          + "   session_data = $3,"
-          + "   last_accessed_time = $4,"
-          + "   expiry_time = $5,"
-          + "   max_inactive_interval = $6"
-          + " WHERE id = $1;";
-
-  public static final String MINIMAL_UPDATE_STATEMENT =
-      "UPDATE session "
-          + " SET "
-          + "   session_id = $2,"
-          + "   last_accessed_time = $3,"
-          + "   expiry_time = $4,"
-          + "   max_inactive_interval = $5"
-          + " WHERE id = $1;";
-
-  public static final String SELECT_STATEMENT =
-      "SELECT "
-          + " id, session_id, session_data, creation_time,"
-          + " last_accessed_time, max_inactive_interval "
-          + "FROM session WHERE session_id = $1;";
-
-  public static final String DELETE_FROM_SESSION_QUERY =
-      "DELETE FROM session WHERE session_id = $1 RETURNING *;";
-
-  public static final String DELETE_EXPIRED_SESSIONS_QUERY =
-      "DELETE FROM session WHERE expiry_time < $1 AND max_inactive_interval >= 0;";
 
   private final PgPool pgPool;
   private final SerializationStrategy serializationStrategy;
@@ -124,6 +77,8 @@ public class ReactivePostgresSessionRepository
 
   @Override
   public Mono<Void> save(PostgresSession postgresSession) {
+    requireNonNull(postgresSession, "postgresSession must not be null");
+
     return Mono.defer(
         () ->
             postgresSession.isNew
@@ -132,110 +87,59 @@ public class ReactivePostgresSessionRepository
   }
 
   private Mono<Void> insertSession(PostgresSession postgresSession) {
-    return Mono.create(
-        sink -> {
-          insertSession(postgresSession, sink);
-        });
-  }
-
-  private void insertSession(PostgresSession postgresSession, MonoSink<Void> sink) {
-    try {
-      pgPool.preparedQuery(
-          INSERT_STATEMENT,
-          Tuple.of(
-              postgresSession.internalPrimaryKey,
-              postgresSession.getId(),
-              sessionDataAsByteBuffer(postgresSession),
-              postgresSession.getCreationTime().toEpochMilli(),
-              postgresSession.getLastAccessedTime().toEpochMilli(),
-              postgresSession.getExpiryTime().toEpochMilli(),
-              (int) postgresSession.getMaxInactiveInterval().getSeconds()),
-          asyncResult -> handleInsertOrUpdate(asyncResult, sink, postgresSession));
-    } catch (Exception ex) {
-      sink.error(ex);
-    }
+    return insertSessionCore(postgresSession)
+        .handle((rows, sink) -> handleInsertOrUpdate(postgresSession, rows, sink))
+        .then();
   }
 
   private Mono<Void> updateSession(PostgresSession postgresSession) {
-    return Mono.create(
-        sink -> {
-          if (postgresSession.isChanged()) {
-            updateSession(postgresSession, sink);
-          } else {
-            updateSessionWithoutSessionData(postgresSession, sink);
-          }
-        });
+    return updateSessionCore(postgresSession)
+        .handle((rows, sink) -> handleInsertOrUpdate(postgresSession, rows, sink))
+        .then();
   }
 
-  private void updateSession(PostgresSession postgresSession, MonoSink<Void> sink) {
-    try {
-      pgPool.preparedQuery(
-          UPDATE_STATEMENT,
-          Tuple.of(
-              postgresSession.internalPrimaryKey,
-              postgresSession.getId(),
-              sessionDataAsByteBuffer(postgresSession),
-              postgresSession.getLastAccessedTime().toEpochMilli(),
-              postgresSession.getExpiryTime().toEpochMilli(),
-              (int) postgresSession.getMaxInactiveInterval().getSeconds()),
-          asyncResult -> handleInsertOrUpdate(asyncResult, sink, postgresSession));
-    } catch (Exception ex) {
-      sink.error(ex);
-    }
+  private Mono<PgRowSet> insertSessionCore(PostgresSession postgresSession) {
+    return preparedQuery(INSERT_SQL, buildParametersForInsert(postgresSession));
   }
 
-  private void updateSessionWithoutSessionData(
-      PostgresSession postgresSession, MonoSink<Void> sink) {
-    try {
-      pgPool.preparedQuery(
-          MINIMAL_UPDATE_STATEMENT,
-          Tuple.of(
-              postgresSession.internalPrimaryKey,
-              postgresSession.getId(),
-              postgresSession.getLastAccessedTime().toEpochMilli(),
-              postgresSession.getExpiryTime().toEpochMilli(),
-              (int) postgresSession.getMaxInactiveInterval().getSeconds()),
-          asyncResult -> handleInsertOrUpdate(asyncResult, sink, postgresSession));
-    } catch (Exception ex) {
-      sink.error(ex);
+  private Mono<PgRowSet> updateSessionCore(PostgresSession postgresSession) {
+    if (postgresSession.isChanged()) {
+      return preparedQuery(UPDATE_SQL, buildParametersForUpdate(postgresSession));
     }
+    return preparedQuery(REDUCED_UPDATE_SQL, buildReducedParametersForUpdate(postgresSession));
   }
 
   private void handleInsertOrUpdate(
-      AsyncResult<PgRowSet> asyncResult, MonoSink<Void> sink, PostgresSession postgresSession) {
-    if (asyncResult.succeeded()) {
-      if (asyncResult.result().rowCount() == 1) {
-        postgresSession.clearChangeFlags();
-        sink.success();
-        return;
-      }
-      sink.error(
-          new ReactivePostgresSessionException(
-              "SQLStatement did not return the expected row count."));
+      PostgresSession session, PgRowSet pgRowSet, SynchronousSink<Object> sink) {
+    if (pgRowSet.rowCount() == 1) {
+      session.clearChangeFlags();
+      sink.complete();
       return;
     }
-    sink.error(asyncResult.cause());
+    var ex =
+        new ReactivePostgresSessionException(
+            "SQLStatement did not return the expected row count of 1, did return "
+                + pgRowSet.rowCount()
+                + " inserted/updated records.");
+    sink.error(ex);
   }
 
   @Override
   public Mono<PostgresSession> findById(String id) {
-    return Mono.<PgRowSet>create(
-            sink -> pgPool.preparedQuery(SELECT_STATEMENT, Tuple.of(id), new Adapter<>(sink)))
+    requireNonNull(id, "id must not be null");
+
+    return preparedQuery(SELECT_SQL, Tuple.of(id))
         .flatMap(pgRowSet -> Mono.justOrEmpty(mapRowSetToPostgresSession(pgRowSet)))
         .filter(postgresSession -> !postgresSession.isExpired());
   }
 
   private PostgresSession mapRowSetToPostgresSession(PgRowSet pgRowSet) {
-    // TODO: Log a warning if there is more than one row...
     return pgRowSet.rowCount() >= 1 ? mapRowToPostgresSession(pgRowSet.iterator().next()) : null;
   }
 
   private PostgresSession mapRowToPostgresSession(Row row) {
     Buffer sessionDataBuffer = row.getBuffer("session_data");
-    Map<String, Object> sessionData =
-        sessionDataBuffer == null
-            ? new HashMap<>()
-            : serializationStrategy.deserialize(sessionDataBuffer.getBytes());
+    Map<String, Object> sessionData = byteBufferAsSessionData(sessionDataBuffer);
 
     return new PostgresSession(
         row.getUUID("id"),
@@ -248,35 +152,67 @@ public class ReactivePostgresSessionRepository
 
   @Override
   public Mono<Void> deleteById(String id) {
-    return Mono.defer(
-        () ->
-            Mono.<PgRowSet>create(
-                    sink ->
-                        pgPool.preparedQuery(
-                            DELETE_FROM_SESSION_QUERY, Tuple.of(id), new Adapter<>(sink)))
-                .then());
+    requireNonNull(id, "id must not be null");
+    return Mono.defer(() -> preparedQuery(DELETE_FROM_SESSION_SQL, Tuple.of(id)).then());
   }
 
   public Mono<Integer> cleanupExpiredSessions() {
     return Mono.defer(
         () ->
-            Mono.<PgRowSet>create(
-                    sink ->
-                        pgPool.preparedQuery(
-                            DELETE_EXPIRED_SESSIONS_QUERY,
-                            Tuple.of(clock.millis()),
-                            new Adapter<>(sink)))
+            preparedQuery(DELETE_EXPIRED_SESSIONS_SQL, Tuple.of(clock.millis()))
                 .map(PgResult::rowCount));
   }
 
-  private Buffer sessionDataAsByteBuffer(PostgresSession postgresSession) {
-    if (postgresSession.sessionData.isEmpty()) {
-      return null;
-    }
-    return Buffer.buffer(serializationStrategy.serialize(postgresSession.sessionData));
+  private Mono<PgRowSet> preparedQuery(String statement, Tuple parameters) {
+    return Mono.create(
+        sink -> pgPool.preparedQuery(statement, parameters, new MonoToVertxHandlerAdapter<>(sink)));
   }
 
-  final class PostgresSession implements Session {
+  private Tuple buildParametersForInsert(PostgresSession postgresSession) {
+    return Tuple.of(
+        postgresSession.internalPrimaryKey,
+        postgresSession.getId(),
+        sessionDataAsByteBuffer(postgresSession.sessionData),
+        postgresSession.getCreationTime().toEpochMilli(),
+        postgresSession.getLastAccessedTime().toEpochMilli(),
+        postgresSession.getExpiryTime().toEpochMilli(),
+        (int) postgresSession.getMaxInactiveInterval().getSeconds());
+  }
+
+  private Tuple buildParametersForUpdate(PostgresSession postgresSession) {
+    return Tuple.of(
+        postgresSession.internalPrimaryKey,
+        postgresSession.getId(),
+        sessionDataAsByteBuffer(postgresSession.sessionData),
+        postgresSession.getLastAccessedTime().toEpochMilli(),
+        postgresSession.getExpiryTime().toEpochMilli(),
+        (int) postgresSession.getMaxInactiveInterval().getSeconds());
+  }
+
+  private Tuple buildReducedParametersForUpdate(PostgresSession postgresSession) {
+    return Tuple.of(
+        postgresSession.internalPrimaryKey,
+        postgresSession.getId(),
+        postgresSession.getLastAccessedTime().toEpochMilli(),
+        postgresSession.getExpiryTime().toEpochMilli(),
+        (int) postgresSession.getMaxInactiveInterval().getSeconds());
+  }
+
+  private Buffer sessionDataAsByteBuffer(Map<String, Object> sessionData) {
+    if (sessionData.isEmpty()) {
+      return null;
+    }
+    return Buffer.buffer(serializationStrategy.serialize(sessionData));
+  }
+
+  private Map<String, Object> byteBufferAsSessionData(Buffer sessionDataBuffer) {
+    if (sessionDataBuffer == null) {
+      return new HashMap<>();
+    }
+    return serializationStrategy.deserialize(sessionDataBuffer.getBytes());
+  }
+
+  class PostgresSession implements Session {
 
     private final UUID internalPrimaryKey;
     private final Map<String, Object> sessionData;
@@ -404,21 +340,21 @@ public class ReactivePostgresSessionRepository
     }
   }
 
-  private static class Adapter<T> implements Handler<AsyncResult<T>> {
+  private static class MonoToVertxHandlerAdapter<T> implements Handler<AsyncResult<T>> {
 
-    private final MonoSink<T> monoSink;
+    private final MonoSink<T> sink;
 
-    private Adapter(MonoSink<T> monoSink) {
-      this.monoSink = Objects.requireNonNull(monoSink, "monoSink must not be null");
+    private MonoToVertxHandlerAdapter(MonoSink<T> sink) {
+      this.sink = requireNonNull(sink, "sink must not be null");
     }
 
     @Override
     public void handle(AsyncResult<T> event) {
       if (event.succeeded()) {
-        monoSink.success(event.result());
+        sink.success(event.result());
         return;
       }
-      monoSink.error(event.cause());
+      sink.error(event.cause());
     }
   }
 }
