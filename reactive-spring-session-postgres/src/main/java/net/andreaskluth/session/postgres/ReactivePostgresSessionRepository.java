@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.UUID;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
 import net.andreaskluth.session.postgres.serializer.SerializationStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.session.ReactiveSessionRepository;
 import org.springframework.session.Session;
 import reactor.core.publisher.Mono;
@@ -36,6 +38,9 @@ import reactor.core.publisher.SynchronousSink;
  */
 public class ReactivePostgresSessionRepository
     implements ReactiveSessionRepository<PostgresSession> {
+
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(ReactivePostgresSessionRepository.class);
 
   private final PgPool pgPool;
   private final SerializationStrategy serializationStrategy;
@@ -87,12 +92,21 @@ public class ReactivePostgresSessionRepository
   }
 
   private Mono<Void> insertSession(PostgresSession postgresSession) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Insert new session with id: {}", postgresSession.sessionId);
+    }
     return insertSessionCore(postgresSession)
         .handle((rows, sink) -> handleInsertOrUpdate(postgresSession, rows, sink))
         .then();
   }
 
   private Mono<Void> updateSession(PostgresSession postgresSession) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "Update changed session with id: {} updates session data: {}",
+          postgresSession.sessionId,
+          postgresSession.changed);
+    }
     return updateSessionCore(postgresSession)
         .handle((rows, sink) -> handleInsertOrUpdate(postgresSession, rows, sink))
         .then();

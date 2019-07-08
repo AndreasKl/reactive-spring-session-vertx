@@ -81,13 +81,13 @@ class HelloController {
 fun main(args: Array<String>) {
     val log = LoggerFactory.getLogger(PostgresSessionDemoApplication::class.java)
 
-    val provider = PreparedDbProvider.forPreparer({ ds ->
+    val provider = PreparedDbProvider.forPreparer { ds ->
         ds.connection.use { connection ->
             connection.createStatement().use { statement ->
                 statement.execute("CREATE DATABASE session")
             }
         }
-    }, listOf())
+    }
     val connInfo = provider.createNewDatabase()
     exportPort(log, connInfo)
     runApplication<PostgresSessionDemoApplication>(*args)
