@@ -25,6 +25,7 @@ import org.springframework.web.server.session.DefaultWebSessionManager
 import org.springframework.web.server.session.WebSessionManager
 import reactor.core.publisher.Mono
 import java.time.Clock
+import java.util.function.Consumer
 import javax.annotation.PostConstruct
 
 @SpringBootApplication
@@ -42,7 +43,7 @@ class PostgresSessionConfiguration {
                     .setDatabase("session")
                     .setUser("postgres")
                     .setPassword("postgres")
-                    .setMaxSize(5)
+                    .setMaxSize(10)
                     .setMaxWaitQueueSize(10)
                     .setIdleTimeout(300)
                     .setConnectTimeout(500)
@@ -81,13 +82,14 @@ class HelloController {
 fun main(args: Array<String>) {
     val log = LoggerFactory.getLogger(PostgresSessionDemoApplication::class.java)
 
-    val provider = PreparedDbProvider.forPreparer { ds ->
+    val provider = PreparedDbProvider.forPreparer({ ds ->
         ds.connection.use { connection ->
             connection.createStatement().use { statement ->
                 statement.execute("CREATE DATABASE session")
             }
         }
-    }
+    }, listOf(Consumer { builder -> builder.setPort(39889) }))
+
     val connInfo = provider.createNewDatabase()
     exportPort(log, connInfo)
     runApplication<PostgresSessionDemoApplication>(*args)
