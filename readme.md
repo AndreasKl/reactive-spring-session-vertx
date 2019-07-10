@@ -62,6 +62,10 @@ mvn clean verify
 Deploy the current SNAPSHOT to **oss.sonatype.org**:
 ```bash
 mvn -P release -pl reactive-spring-session-postgres clean deploy
+
+mvn -P release -pl reactive-spring-session-postgres  nexus-staging:rc-list
+
+mvn -P release -pl reactive-spring-session-postgres -DstagingRepositoryId=netandreaskluth-<some-id>  nexus-staging:release
 ```
 
 
