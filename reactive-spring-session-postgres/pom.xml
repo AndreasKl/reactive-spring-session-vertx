@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>net.andreaskluth</groupId>
   <artifactId>reactive-spring-session-postgres</artifactId>
-  <version>0.0.2-SNAPSHOT</version>
+  <version>0.0.2</version>
 
   <name>reactive-spring-session-postgres</name>
   <description>Parent for reactive Spring Session repository for postgres</description>
@@ -34,6 +32,7 @@
     <connection>scm:git:git://github.com/AndreasKl/tomatenmark.git</connection>
     <developerConnection>scm:git:ssh://github.com:AndreasKl/tomatenmark.git</developerConnection>
     <url>http://github.com/AndreasKl/tomatenmark/tree/master</url>
+    <tag>reactive-spring-session-postgres-parent-0.0.2</tag>
   </scm>
 
   <properties>
