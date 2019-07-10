@@ -1,6 +1,7 @@
 package net.andreaskluth.session.postgres.serializer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import java.io.Serializable;
@@ -32,12 +33,34 @@ public abstract class TestSerializationStrategyBase {
         .isEqualTo(LocalDateTime.MAX);
   }
 
+  @Test
+  public void failsOnNotSerializableObjects() {
+    assertThatThrownBy(
+            () -> strategy().serialize(Map.of("fails", (new NotSerializable(Instant.now())))))
+        .isInstanceOf(SerializationException.class);
+  }
+
+  @Test
+  public void failsOnNotDeserializableObjects() {
+    assertThatThrownBy(() -> strategy().deserialize(new byte[] {23, 42}))
+        .isInstanceOf(DeserializationException.class);
+  }
+
   private Map<String, Object> complexData() {
     return Map.of(
         "complex", new Complex(LocalDateTime.MAX, Instant.MIN), "started", System.nanoTime());
   }
 
   abstract SerializationStrategy strategy();
+
+  private static class NotSerializable {
+
+    private final Instant instant;
+
+    private NotSerializable(Instant instant) {
+      this.instant = instant;
+    }
+  }
 
   public static class Complex implements Serializable {
 
