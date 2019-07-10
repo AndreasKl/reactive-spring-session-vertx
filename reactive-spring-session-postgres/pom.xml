@@ -5,7 +5,7 @@
 
   <groupId>net.andreaskluth</groupId>
   <artifactId>reactive-spring-session-postgres</artifactId>
-  <version>0.0.2</version>
+  <version>0.0.3-SNAPSHOT</version>
 
   <name>reactive-spring-session-postgres</name>
   <description>Parent for reactive Spring Session repository for postgres</description>
@@ -32,7 +32,7 @@
     <connection>scm:git:git://github.com/AndreasKl/tomatenmark.git</connection>
     <developerConnection>scm:git:ssh://github.com:AndreasKl/tomatenmark.git</developerConnection>
     <url>http://github.com/AndreasKl/tomatenmark/tree/master</url>
-    <tag>reactive-spring-session-postgres-parent-0.0.2</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
