@@ -21,7 +21,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
@@ -297,9 +296,9 @@ public class ReactivePostgresSessionRepository
 
     @Override
     public void setAttribute(String key, Object value) {
-      var existingKey = sessionData.containsKey(key);
+      var keyExists = sessionData.containsKey(key);
       var oldValue = sessionData.put(key, value);
-      changed = !(existingKey && Objects.equals(oldValue, value));
+      changed = !keyExists || oldValue != value;
     }
 
     @Override
