@@ -12,7 +12,7 @@ and will switch to **[vertx-sql-client](https://github.com/eclipse-vertx/vertx-s
 Runs on JDK 11 and JDK 12, if there is a need a JDK 8 version would be possible.
 
 ## How to use
-A demo project is located under `/demo-application` written in Kotlin.
+A demo project is located under `/webflux-demo-application` written in Kotlin.
 `ReactivePostgresSessionConfiguration` registers a `ReactivePostgresSessionRepository` 
 and a scheduled task that removes expired sessions from the database. Expired sessions
 are never returned to the user, however could remain in the database until the scheduler
@@ -50,7 +50,7 @@ class PostgresSessionConfiguration {
 
 
 ## Development State
-tomatenmark is currently under development and probably not production ready.
+**tomatenmark** is used in production **[@REWE digital](https://www.rewe-digital.com/)** for our reactive frontend gateway.
 
 ## Build
 
@@ -69,7 +69,7 @@ mvn -P release -pl reactive-spring-session-postgres -DstagingRepositoryId=netand
 ```
 
 ## Contributing
-Source code formatting is checked with [fmt-maven-plugin](https://github.com/coveooss/fmt-maven-plugin). Configuration files for the formatter of your preferred IDE can be found [here](https://github.com/google/styleguide).
+Source code formatting is checked with [fmt-maven-plugin](https://github.com/coveooss/fmt-maven-plugin). Configuration files for the formatter of your preferred IDE can be found [here](https://github.com/google/styleguide) a plugin for IntelliJ IDEA can be found [here](https://plugins.jetbrains.com/plugin/8527-google-java-format).
 
 # License 
 The MIT License (https://opensource.org/licenses/MIT)
