@@ -164,6 +164,27 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
+  public void updatingWithSameValueShouldNotChangeSession() {
+    var repo = sessionRepository();
+    var session = repo.createSession().block();
+
+    session.setAttribute(KEY, VALUE);
+    session.clearChangeFlags();
+    session.setAttribute(KEY, VALUE);
+
+    assertThat(session.isChanged()).isFalse();
+  }
+
+  @Test
+  public void addingNullValueForNewKeyShouldChangeSession() {
+    var repo = sessionRepository();
+    var session = repo.createSession().block();
+    session.clearChangeFlags();
+    session.setAttribute(KEY, null);
+    assertThat(session.isChanged()).isTrue();
+  }
+
+  @Test
   public void storeComplexObjectsInSession() {
     var repo = sessionRepository();
     var session = repo.createSession().block();

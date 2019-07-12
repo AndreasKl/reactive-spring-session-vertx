@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
@@ -242,7 +243,7 @@ public class ReactivePostgresSessionRepository
 
     /** Generate a new session. */
     PostgresSession(Clock clock, Duration maxInactiveInterval) {
-      this.clock = requireNonNull(clock, "clock must not be null");
+      this.clock = clock;
       this.internalPrimaryKey = UUID.randomUUID();
       this.sessionId = UUID.randomUUID().toString();
       this.sessionData = new HashMap<>();
@@ -261,7 +262,7 @@ public class ReactivePostgresSessionRepository
         Instant creationTime,
         Instant lastAccessedTime,
         Duration maxInactiveInterval) {
-      this.clock = requireNonNull(clock, "clock must not be null");
+      this.clock = clock;
       this.internalPrimaryKey = internalPrimaryKey;
       this.sessionId = sessionId;
       this.sessionData = sessionData;
@@ -296,8 +297,9 @@ public class ReactivePostgresSessionRepository
 
     @Override
     public void setAttribute(String key, Object value) {
-      changed = true;
-      sessionData.put(key, value);
+      var existingKey = sessionData.containsKey(key);
+      var oldValue = sessionData.put(key, value);
+      changed = !(existingKey && Objects.equals(oldValue, value));
     }
 
     @Override
