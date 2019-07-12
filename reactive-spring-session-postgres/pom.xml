@@ -8,7 +8,7 @@
   <version>0.0.3-SNAPSHOT</version>
 
   <name>reactive-spring-session-postgres</name>
-  <description>Parent for reactive Spring Session repository for postgres</description>
+  <description>Reactive Spring Session repository for postgres (reactive-pg-client)</description>
   <url>https://github.com/AndreasKl/tomatenmark</url>
 
   <licenses>
