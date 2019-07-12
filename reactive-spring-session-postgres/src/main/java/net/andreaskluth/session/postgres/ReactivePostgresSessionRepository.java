@@ -77,7 +77,7 @@ public class ReactivePostgresSessionRepository
 
   @Override
   public Mono<PostgresSession> createSession() {
-    return Mono.defer(() -> Mono.just(new PostgresSession()));
+    return Mono.defer(() -> Mono.just(new PostgresSession(clock, defaultMaxInactiveInterval)));
   }
 
   @Override
@@ -156,6 +156,7 @@ public class ReactivePostgresSessionRepository
     Map<String, Object> sessionData = byteBufferAsSessionData(sessionDataBuffer);
 
     return new PostgresSession(
+        clock,
         row.getUUID("id"),
         row.getString("session_id"),
         sessionData,
@@ -226,10 +227,11 @@ public class ReactivePostgresSessionRepository
     return serializationStrategy.deserialize(sessionDataBuffer.getBytes());
   }
 
-  class PostgresSession implements Session {
+  static class PostgresSession implements Session {
 
     private final UUID internalPrimaryKey;
     private final Map<String, Object> sessionData;
+    private final Clock clock;
 
     private String sessionId;
     private boolean isNew;
@@ -239,24 +241,27 @@ public class ReactivePostgresSessionRepository
     private Duration maxInactiveInterval;
 
     /** Generate a new session. */
-    PostgresSession() {
+    PostgresSession(Clock clock, Duration maxInactiveInterval) {
+      this.clock = requireNonNull(clock, "clock must not be null");
       this.internalPrimaryKey = UUID.randomUUID();
       this.sessionId = UUID.randomUUID().toString();
       this.sessionData = new HashMap<>();
-      this.creationTime = ReactivePostgresSessionRepository.this.clock.instant();
-      this.lastAccessedTime = ReactivePostgresSessionRepository.this.clock.instant();
-      this.maxInactiveInterval = ReactivePostgresSessionRepository.this.defaultMaxInactiveInterval;
+      this.maxInactiveInterval = maxInactiveInterval;
+      this.creationTime = clock.instant();
+      this.lastAccessedTime = clock.instant();
       this.isNew = true;
     }
 
     /** Load an existing session. */
     PostgresSession(
+        Clock clock,
         UUID internalPrimaryKey,
         String sessionId,
         Map<String, Object> sessionData,
         Instant creationTime,
         Instant lastAccessedTime,
         Duration maxInactiveInterval) {
+      this.clock = requireNonNull(clock, "clock must not be null");
       this.internalPrimaryKey = internalPrimaryKey;
       this.sessionId = sessionId;
       this.sessionData = sessionData;
