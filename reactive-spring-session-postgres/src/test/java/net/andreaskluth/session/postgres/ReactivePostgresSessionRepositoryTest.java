@@ -164,7 +164,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void updatingWithSameValueShouldNotChangeSession() {
+  public void updatingWithSameValueShouldChangeSession() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
@@ -172,15 +172,17 @@ public class ReactivePostgresSessionRepositoryTest {
     session.clearChangeFlags();
     session.setAttribute(KEY, VALUE);
 
-    assertThat(session.isChanged()).isFalse();
+    assertThat(session.isChanged()).isTrue();
   }
 
   @Test
   public void addingNullValueForNewKeyShouldChangeSession() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
+
     session.clearChangeFlags();
     session.setAttribute(KEY, null);
+
     assertThat(session.isChanged()).isTrue();
   }
 
