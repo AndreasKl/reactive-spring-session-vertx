@@ -296,9 +296,8 @@ public class ReactivePostgresSessionRepository
 
     @Override
     public void setAttribute(String key, Object value) {
-      var keyExists = sessionData.containsKey(key);
-      var oldValue = sessionData.put(key, value);
-      changed = !keyExists || oldValue != value;
+      changed = true;
+      sessionData.put(key, value);
     }
 
     @Override
