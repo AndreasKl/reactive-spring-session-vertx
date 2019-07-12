@@ -68,6 +68,8 @@ mvn -P release -pl reactive-spring-session-postgres  nexus-staging:rc-list
 mvn -P release -pl reactive-spring-session-postgres -DstagingRepositoryId=netandreaskluth-<some-id>  nexus-staging:release
 ```
 
+## Contributing
+Source code formatting is checked with [fmt-maven-plugin](https://github.com/coveooss/fmt-maven-plugin). Configuration files for the formatter of your preferred IDE can be found [here](https://github.com/google/styleguide).
 
 # License 
 The MIT License (https://opensource.org/licenses/MIT)
