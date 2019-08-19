@@ -9,7 +9,7 @@
   </parent>
   <groupId>net.andreaskluth</groupId>
   <artifactId>postgres-session-demo</artifactId>
-  <version>0.0.5-SNAPSHOT</version>
+  <version>0.0.5</version>
   <name>postgres-session-demo</name>
   <description>Postgres reactive session demo</description>
 
@@ -113,4 +113,8 @@
       </plugin>
     </plugins>
   </build>
+
+  <scm>
+    <tag>reactive-spring-session-postgres-parent-0.0.5</tag>
+  </scm>
 </project>
