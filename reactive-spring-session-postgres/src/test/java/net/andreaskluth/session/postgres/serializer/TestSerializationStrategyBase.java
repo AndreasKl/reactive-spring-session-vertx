@@ -36,7 +36,7 @@ public abstract class TestSerializationStrategyBase {
   @Test
   public void failsOnNotSerializableObjects() {
     assertThatThrownBy(
-            () -> strategy().serialize(Map.of("fails", (new NotSerializable(Instant.now())))))
+            () -> strategy().serialize(Map.of("fails", new NotSerializable(Instant.now()))))
         .isInstanceOf(SerializationException.class);
   }
 
@@ -53,6 +53,7 @@ public abstract class TestSerializationStrategyBase {
 
   abstract SerializationStrategy strategy();
 
+  @SuppressWarnings("UnusedVariable")
   private static class NotSerializable {
 
     private final Instant instant;

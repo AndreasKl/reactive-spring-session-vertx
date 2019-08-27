@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
 import net.andreaskluth.session.postgres.serializer.SerializationStrategy;
 import org.slf4j.Logger;
@@ -42,9 +43,14 @@ public class ReactivePostgresSessionRepository
   private static final Logger LOGGER =
       LoggerFactory.getLogger(ReactivePostgresSessionRepository.class);
 
+  private static final String SEQUENCE_DEFAULT_NAME = "ReactivePostgresSessionRepository";
+
   private final PgPool pgPool;
   private final SerializationStrategy serializationStrategy;
   private final Clock clock;
+
+  private boolean enableMetrics = false;
+  private String sequenceName = SEQUENCE_DEFAULT_NAME;
   private Duration defaultMaxInactiveInterval = Duration.ofSeconds(1800);
 
   /**
@@ -64,6 +70,24 @@ public class ReactivePostgresSessionRepository
   }
 
   /**
+   * Activates {@link Mono#metrics()} for all operations.
+   *
+   * @param enableMetrics whether metrics should be generated or not.
+   */
+  public void setEnableMetrics(boolean enableMetrics) {
+    this.enableMetrics = enableMetrics;
+  }
+
+  /**
+   * Set a custom sequence name used for metrics see {@link Mono#name(String)}.
+   *
+   * @param sequenceName overrides the default sequence name
+   */
+  public void setSequenceName(String sequenceName) {
+    this.sequenceName = sequenceName;
+  }
+
+  /**
    * Sets the maximum inactive interval in seconds between requests before newly created sessions
    * will be invalidated. A negative time indicates that the session will never timeout. The default
    * is 1800 (30 minutes).
@@ -77,7 +101,8 @@ public class ReactivePostgresSessionRepository
 
   @Override
   public Mono<PostgresSession> createSession() {
-    return Mono.defer(() -> Mono.just(new PostgresSession(clock, defaultMaxInactiveInterval)));
+    return Mono.defer(() -> Mono.just(new PostgresSession(clock, defaultMaxInactiveInterval)))
+        .as(new AddMetricsIfEnabled<>("createSession"));
   }
 
   @Override
@@ -85,10 +110,11 @@ public class ReactivePostgresSessionRepository
     requireNonNull(postgresSession, "postgresSession must not be null");
 
     return Mono.defer(
-        () ->
-            postgresSession.isNew
-                ? insertSession(postgresSession)
-                : updateSession(postgresSession));
+            () ->
+                postgresSession.isNew
+                    ? insertSession(postgresSession)
+                    : updateSession(postgresSession))
+        .as(new AddMetricsIfEnabled<>("save"));
   }
 
   private Mono<Void> insertSession(PostgresSession postgresSession) {
@@ -144,7 +170,8 @@ public class ReactivePostgresSessionRepository
 
     return preparedQuery(SELECT_SQL, Tuple.of(id))
         .flatMap(pgRowSet -> Mono.justOrEmpty(mapRowSetToPostgresSession(pgRowSet)))
-        .filter(postgresSession -> !postgresSession.isExpired());
+        .filter(postgresSession -> !postgresSession.isExpired())
+        .as(new AddMetricsIfEnabled<>("findById"));
   }
 
   private PostgresSession mapRowSetToPostgresSession(PgRowSet pgRowSet) {
@@ -168,14 +195,16 @@ public class ReactivePostgresSessionRepository
   @Override
   public Mono<Void> deleteById(String id) {
     requireNonNull(id, "id must not be null");
-    return Mono.defer(() -> preparedQuery(DELETE_FROM_SESSION_SQL, Tuple.of(id)).then());
+    return Mono.defer(() -> preparedQuery(DELETE_FROM_SESSION_SQL, Tuple.of(id)).then())
+        .as(new AddMetricsIfEnabled<>("deleteById"));
   }
 
   public Mono<Integer> cleanupExpiredSessions() {
     return Mono.defer(
-        () ->
-            preparedQuery(DELETE_EXPIRED_SESSIONS_SQL, Tuple.of(clock.millis()))
-                .map(PgResult::rowCount));
+            () ->
+                preparedQuery(DELETE_EXPIRED_SESSIONS_SQL, Tuple.of(clock.millis()))
+                    .map(PgResult::rowCount))
+        .as(new AddMetricsIfEnabled<>("cleanupExpiredSessions"));
   }
 
   private Mono<PgRowSet> preparedQuery(String statement, Tuple parameters) {
@@ -374,6 +403,22 @@ public class ReactivePostgresSessionRepository
         return;
       }
       sink.error(event.cause());
+    }
+  }
+
+  private class AddMetricsIfEnabled<T> implements Function<Mono<T>, Mono<T>> {
+
+    private String methodName;
+
+    private AddMetricsIfEnabled(String methodName) {
+      this.methodName = requireNonNull(methodName, "methodName must not be null");
+    }
+
+    @Override
+    public Mono<T> apply(Mono<T> toDecorateWithMetrics) {
+      return enableMetrics
+          ? toDecorateWithMetrics.metrics().name(sequenceName).tag("method", methodName)
+          : toDecorateWithMetrics;
     }
   }
 }

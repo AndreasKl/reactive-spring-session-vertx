@@ -296,6 +296,7 @@ public class ReactivePostgresSessionRepositoryTest {
     ReflectionUtils.setField(sessionIdField, anotherSession, sessionId);
   }
 
+  @SuppressWarnings("UnusedVariable")
   private static class NotSerializable {
 
     private final Instant instant;
