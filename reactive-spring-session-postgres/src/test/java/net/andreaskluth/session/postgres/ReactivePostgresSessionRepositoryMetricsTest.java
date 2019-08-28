@@ -60,6 +60,8 @@ public class ReactivePostgresSessionRepositoryMetricsTest {
     var session = repo.createSession().block();
     repo.save(session).block();
     repo.findById(session.getId()).block();
+    repo.cleanupExpiredSessions().block();
+    repo.deleteById(session.getId()).block();
 
     assertThat(
             Metrics.globalRegistry
@@ -67,7 +69,7 @@ public class ReactivePostgresSessionRepositoryMetricsTest {
                 .tag("status", "completed")
                 .timer()
                 .count())
-        .isEqualTo(3L);
+        .isEqualTo(5L);
   }
 
   private ReactivePostgresSessionRepository sessionRepository() {
