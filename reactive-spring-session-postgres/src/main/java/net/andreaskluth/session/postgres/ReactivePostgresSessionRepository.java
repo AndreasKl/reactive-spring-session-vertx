@@ -102,7 +102,7 @@ public class ReactivePostgresSessionRepository
   @Override
   public Mono<PostgresSession> createSession() {
     return Mono.defer(() -> Mono.just(new PostgresSession(clock, defaultMaxInactiveInterval)))
-        .as(new AddMetricsIfEnabled<>("createSession"));
+        .as(addMetricsIfEnabled("createSession"));
   }
 
   @Override
@@ -114,7 +114,7 @@ public class ReactivePostgresSessionRepository
                 postgresSession.isNew
                     ? insertSession(postgresSession)
                     : updateSession(postgresSession))
-        .as(new AddMetricsIfEnabled<>("save"));
+        .as(addMetricsIfEnabled("save"));
   }
 
   private Mono<Void> insertSession(PostgresSession postgresSession) {
@@ -171,7 +171,7 @@ public class ReactivePostgresSessionRepository
     return preparedQuery(SELECT_SQL, Tuple.of(id))
         .flatMap(pgRowSet -> Mono.justOrEmpty(mapRowSetToPostgresSession(pgRowSet)))
         .filter(postgresSession -> !postgresSession.isExpired())
-        .as(new AddMetricsIfEnabled<>("findById"));
+        .as(addMetricsIfEnabled("findById"));
   }
 
   private PostgresSession mapRowSetToPostgresSession(PgRowSet pgRowSet) {
@@ -196,7 +196,7 @@ public class ReactivePostgresSessionRepository
   public Mono<Void> deleteById(String id) {
     requireNonNull(id, "id must not be null");
     return Mono.defer(() -> preparedQuery(DELETE_FROM_SESSION_SQL, Tuple.of(id)).then())
-        .as(new AddMetricsIfEnabled<>("deleteById"));
+        .as(addMetricsIfEnabled("deleteById"));
   }
 
   public Mono<Integer> cleanupExpiredSessions() {
@@ -204,7 +204,14 @@ public class ReactivePostgresSessionRepository
             () ->
                 preparedQuery(DELETE_EXPIRED_SESSIONS_SQL, Tuple.of(clock.millis()))
                     .map(PgResult::rowCount))
-        .as(new AddMetricsIfEnabled<>("cleanupExpiredSessions"));
+        .as(addMetricsIfEnabled("cleanupExpiredSessions"));
+  }
+
+  private <T> Function<Mono<T>, Mono<T>> addMetricsIfEnabled(String methodName) {
+    return toDecorateWithMetrics ->
+        enableMetrics
+            ? toDecorateWithMetrics.metrics().name(sequenceName).tag("method", methodName)
+            : toDecorateWithMetrics;
   }
 
   private Mono<PgRowSet> preparedQuery(String statement, Tuple parameters) {
@@ -403,22 +410,6 @@ public class ReactivePostgresSessionRepository
         return;
       }
       sink.error(event.cause());
-    }
-  }
-
-  private class AddMetricsIfEnabled<T> implements Function<Mono<T>, Mono<T>> {
-
-    private String methodName;
-
-    private AddMetricsIfEnabled(String methodName) {
-      this.methodName = requireNonNull(methodName, "methodName must not be null");
-    }
-
-    @Override
-    public Mono<T> apply(Mono<T> toDecorateWithMetrics) {
-      return enableMetrics
-          ? toDecorateWithMetrics.metrics().name(sequenceName).tag("method", methodName)
-          : toDecorateWithMetrics;
     }
   }
 }
