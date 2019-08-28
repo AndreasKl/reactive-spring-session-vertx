@@ -20,7 +20,7 @@
   <packaging>pom</packaging>
 
   <name>reactive-spring-session-postgres</name>
-  <url>https://github.com/AndreasKl/tomatenmark</url>
+  <url>https://github.com/AndreasKl/reactive-spring-session-postgres</url>
   <description>Parent for reactive Spring Session repository for postgres</description>
   <inceptionYear>2019</inceptionYear>
 
@@ -38,9 +38,9 @@
   </licenses>
 
   <scm>
-    <connection>scm:git:git@github.com:AndreasKl/tomatenmark.git</connection>
-    <developerConnection>scm:git:git@github.com:AndreasKl/tomatenmark.git</developerConnection>
-    <url>https://github.com/AndreasKl/tomatenmark/tree/master</url>
+    <connection>scm:git:git@github.com:AndreasKl/reactive-spring-session-postgres.git</connection>
+    <developerConnection>scm:git:git@github.com:AndreasKl/reactive-spring-session-postgres.git</developerConnection>
+    <url>https://github.com/AndreasKl/reactive-spring-session-postgres/tree/master</url>
     <tag>HEAD</tag>
   </scm>
 

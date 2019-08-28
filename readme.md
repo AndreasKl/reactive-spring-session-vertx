@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/AndreasKl/tomatenmark.svg?branch=master)](https://travis-ci.org/AndreasKl/tomatenmark) 
-[![codecov](https://codecov.io/gh/AndreasKl/tomatenmark/branch/master/graph/badge.svg)](https://codecov.io/gh/AndreasKl/tomatenmark)
+[![Build Status](https://travis-ci.org/AndreasKl/reactive-spring-session-postgres.svg?branch=master)](https://travis-ci.org/AndreasKl/reactive-spring-session-postgres) 
+[![codecov](https://codecov.io/gh/AndreasKl/reactive-spring-session-postgres/branch/master/graph/badge.svg)](https://codecov.io/gh/AndreasKl/reactive-spring-session-postgres)
 
 # reactive-spring-session-postgres
 Due to the lack of a distributed reactive Spring Session implementations for relational databases,
@@ -50,7 +50,7 @@ class PostgresSessionConfiguration {
 
 
 ## Development State
-**tomatenmark** is used in production **[@REWE digital](https://www.rewe-digital.com/)** for our reactive frontend gateway.
+**reactive-spring-session-postgres** is used in production **[@REWE digital](https://www.rewe-digital.com/)** for our reactive frontend gateway.
 
 ## Build
 
