@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
 import com.opentable.db.postgres.junit.PreparedDbRule;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.MockClock;
 import io.micrometer.core.instrument.simple.SimpleConfig;
@@ -14,6 +15,7 @@ import io.reactiverse.pgclient.PgPoolOptions;
 import java.sql.Connection;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.Set;
 import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
 import net.andreaskluth.session.postgres.support.ReactivePostgresSessionSchemaPopulator;
 import org.junit.After;
@@ -36,12 +38,17 @@ public class ReactivePostgresSessionRepositoryMetricsTest {
 
   @Before
   public void before() {
+    Set<MeterRegistry> registries = Metrics.globalRegistry.getRegistries();
+    registries.forEach(Metrics.globalRegistry::remove);
+
     pgPool = pool();
   }
 
   @After
   public void after() {
     pgPool.close();
+
+    Metrics.globalRegistry.close();
   }
 
   @Test
