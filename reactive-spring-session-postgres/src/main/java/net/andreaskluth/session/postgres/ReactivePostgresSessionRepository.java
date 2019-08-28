@@ -210,7 +210,7 @@ public class ReactivePostgresSessionRepository
   private <T> Function<Mono<T>, Mono<T>> addMetricsIfEnabled(String methodName) {
     return toDecorateWithMetrics ->
         enableMetrics
-            ? toDecorateWithMetrics.metrics().name(sequenceName).tag("method", methodName)
+            ? toDecorateWithMetrics.name(sequenceName).tag("method", methodName).metrics()
             : toDecorateWithMetrics;
   }
 

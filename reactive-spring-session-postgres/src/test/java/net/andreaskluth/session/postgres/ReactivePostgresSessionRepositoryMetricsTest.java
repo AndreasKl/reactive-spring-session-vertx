@@ -63,13 +63,23 @@ public class ReactivePostgresSessionRepositoryMetricsTest {
     repo.cleanupExpiredSessions().block();
     repo.deleteById(session.getId()).block();
 
+    assertThatCallWasMetered("createSession");
+    assertThatCallWasMetered("save");
+    assertThatCallWasMetered("findById");
+    assertThatCallWasMetered("cleanupExpiredSessions");
+    assertThatCallWasMetered("deleteById");
+  }
+
+  private void assertThatCallWasMetered(String save) {
     assertThat(
-            Metrics.globalRegistry
-                .get("reactor.flow.duration")
-                .tag("status", "completed")
-                .timer()
-                .count())
-        .isEqualTo(5L);
+        Metrics.globalRegistry
+            .get("reactor.flow.duration")
+            .tag("status", "completed")
+            .tag("flow", "ReactivePostgresSessionRepository")
+            .tag("method", save)
+            .timer()
+            .count())
+        .isEqualTo(1L);
   }
 
   private ReactivePostgresSessionRepository sessionRepository() {
