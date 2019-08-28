@@ -1,5 +1,8 @@
 # reactive-spring-session-postgres changelog
 
+# 0.0.7
+Fixed metric name and tags.
+
 # 0.0.6
 * `ReactivePostgresSessionRepository` publishes metrics if enable. Set `ReactivePostgresSessionRepository#withMetrics` to `true` to activate `Mono#metrics`.
   * The `flow` tag can be configured by setting `ReactivePostgresSessionRepository#setSequenceName`.
