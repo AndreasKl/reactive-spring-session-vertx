@@ -14,6 +14,7 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Objects;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
 import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
@@ -275,7 +276,7 @@ public class ReactivePostgresSessionRepositoryTest {
 
   private ReactivePostgresSessionRepository sessionRepository() {
     return new ReactivePostgresSessionRepository(
-        pgPool, new JdkSerializationStrategy(), Clock.systemDefaultZone());
+        pgPool, new JdkSerializationStrategy(), Clock.system(ZoneId.systemDefault()));
   }
 
   private PgPool pool() {
@@ -325,7 +326,7 @@ public class ReactivePostgresSessionRepositoryTest {
       if (this == o) {
         return true;
       }
-      if (o == null || getClass() != o.getClass()) {
+      if (!(o instanceof Complex)) {
         return false;
       }
       Complex complex = (Complex) o;

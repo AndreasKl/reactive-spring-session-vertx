@@ -74,7 +74,7 @@ public class ReactivePostgresSessionRepository
    *
    * @param enableMetrics whether metrics should be generated or not.
    */
-  public void setEnableMetrics(boolean enableMetrics) {
+  public void withMetrics(boolean enableMetrics) {
     this.enableMetrics = enableMetrics;
   }
 
