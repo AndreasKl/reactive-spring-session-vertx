@@ -72,13 +72,13 @@ public class ReactivePostgresSessionRepositoryMetricsTest {
 
   private void assertThatCallWasMetered(String save) {
     assertThat(
-        Metrics.globalRegistry
-            .get("reactor.flow.duration")
-            .tag("status", "completed")
-            .tag("flow", "ReactivePostgresSessionRepository")
-            .tag("method", save)
-            .timer()
-            .count())
+            Metrics.globalRegistry
+                .get("reactor.flow.duration")
+                .tag("status", "completed")
+                .tag("flow", "ReactivePostgresSessionRepository")
+                .tag("method", save)
+                .timer()
+                .count())
         .isEqualTo(1L);
   }
 
