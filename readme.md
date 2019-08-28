@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/AndreasKl/tomatenmark.svg?branch=master)](https://travis-ci.org/AndreasKl/tomatenmark) 
 [![codecov](https://codecov.io/gh/AndreasKl/tomatenmark/branch/master/graph/badge.svg)](https://codecov.io/gh/AndreasKl/tomatenmark)
 
-# tomatenmark / working title
+# reactive-spring-session-postgres
 Due to the lack of a distributed reactive Spring Session implementations for relational databases,
 this projects aims to fill the gap with a fully reactive **postgres** Spring Session store.
 
