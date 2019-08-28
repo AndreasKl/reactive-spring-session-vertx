@@ -66,7 +66,7 @@ mvn -P release -pl reactive-spring-session-postgres clean deploy
 
 Deploy a RELEASE to **oss.sonatype.org**:
 ```bash
-mvn release:prepae
+mvn release:prepare
 
 mvn -P release -pl reactive-spring-session-postgres clean deploy
 
