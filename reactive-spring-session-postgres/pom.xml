@@ -9,7 +9,7 @@
 
   <name>reactive-spring-session-postgres</name>
   <description>Reactive Spring Session repository for postgres (reactive-pg-client)</description>
-  <url>https://github.com/AndreasKl/tomatenmark</url>
+  <url>https://github.com/AndreasKl/reactive-spring-session-postgres</url>
 
   <licenses>
     <license>
@@ -29,9 +29,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://github.com/AndreasKl/tomatenmark.git</connection>
-    <developerConnection>scm:git:ssh://github.com:AndreasKl/tomatenmark.git</developerConnection>
-    <url>http://github.com/AndreasKl/tomatenmark/tree/master</url>
+    <connection>scm:git:git://github.com/AndreasKl/reactive-spring-session-postgres.git</connection>
+    <developerConnection>scm:git:ssh://github.com:AndreasKl/reactive-spring-session-postgres.git</developerConnection>
+    <url>http://github.com/AndreasKl/reactive-spring-session-postgres/tree/master</url>
     <tag>HEAD</tag>
   </scm>
 
