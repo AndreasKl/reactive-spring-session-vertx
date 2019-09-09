@@ -2,8 +2,9 @@ package net.andreaskluth.reactivesession
 
 import com.opentable.db.postgres.embedded.ConnectionInfo
 import com.opentable.db.postgres.embedded.PreparedDbProvider
-import io.reactiverse.pgclient.PgPool
-import io.reactiverse.pgclient.PgPoolOptions
+import io.vertx.pgclient.PgConnectOptions
+import io.vertx.sqlclient.Pool
+import io.vertx.sqlclient.PoolOptions
 import net.andreaskluth.session.postgres.ReactivePostgresSessionConfiguration
 import net.andreaskluth.session.postgres.support.ReactivePostgresSessionSchemaPopulator
 import org.slf4j.Logger
@@ -35,67 +36,71 @@ class PostgresSessionDemoApplication
 @Configuration
 class PostgresSessionConfiguration {
 
-    @Bean
-    fun pgPoolOptions(@Value("\${postgres.port}") postgresPort: Int): PgPoolOptions =
-            PgPoolOptions()
-                    .setHost("localhost")
-                    .setPort(postgresPort)
-                    .setDatabase("session")
-                    .setUser("postgres")
-                    .setPassword("postgres")
-                    .setMaxSize(10)
-                    .setMaxWaitQueueSize(10)
-                    .setIdleTimeout(300)
-                    .setConnectTimeout(500)
+  @Bean
+  fun pgConnectOptions(@Value("\${postgres.port}") postgresPort: Int): PgConnectOptions =
+    PgConnectOptions()
+      .setHost("localhost")
+      .setPort(postgresPort)
+      .setDatabase("session")
+      .setUser("postgres")
+      .setPassword("postgres")
+      .setIdleTimeout(300)
+      .setConnectTimeout(500)
 
-    @Bean
-    fun clock(): Clock =
-            Clock.systemUTC()
+  @Bean
+  fun poolOptions(): PoolOptions =
+    PoolOptions()
+      .setMaxSize(5)
+      .setMaxWaitQueueSize(10)
 
-    @Bean(WebHttpHandlerBuilder.WEB_SESSION_MANAGER_BEAN_NAME)
-    fun webSessionManager(repository: ReactiveSessionRepository<out Session>): WebSessionManager {
-        val sessionStore = SpringSessionWebSessionStore(repository)
+  @Bean
+  fun clock(): Clock =
+    Clock.systemUTC()
 
-        val manager = DefaultWebSessionManager()
-        manager.sessionStore = sessionStore
-        return manager
-    }
+  @Bean(WebHttpHandlerBuilder.WEB_SESSION_MANAGER_BEAN_NAME)
+  fun webSessionManager(repository: ReactiveSessionRepository<out Session>): WebSessionManager {
+    val sessionStore = SpringSessionWebSessionStore(repository)
+
+    val manager = DefaultWebSessionManager()
+    manager.sessionStore = sessionStore
+    return manager
+  }
 
 }
 
 @Configuration
-class PrepareSchemaConfiguration(val pgPool: PgPool) {
+class PrepareSchemaConfiguration(val pool: Pool) {
 
-    @PostConstruct
-    fun prepareSchema() {
-        ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(pgPool).block()
-    }
+  @PostConstruct
+  fun prepareSchema() {
+    ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(pool).block()
+  }
 }
 
 @Controller
 class HelloController {
 
-    @GetMapping("/")
-    fun hello(): ResponseEntity<Mono<String>> = ResponseEntity.ok(Mono.just("hallo"))
+  @GetMapping("/")
+  fun hello(): ResponseEntity<Mono<String>> = ResponseEntity.ok(Mono.just("hallo"))
 }
 
 fun main(args: Array<String>) {
-    val log = LoggerFactory.getLogger(PostgresSessionDemoApplication::class.java)
+  val log = LoggerFactory.getLogger(PostgresSessionDemoApplication::class.java)
 
-    val provider = PreparedDbProvider.forPreparer({ ds ->
-        ds.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.execute("CREATE DATABASE session")
-            }
-        }
-    }, listOf(Consumer { builder -> builder.setPort(39889) }))
+  val provider = PreparedDbProvider.forPreparer({ ds ->
+    ds.connection.use { connection ->
+      connection.createStatement().use { statement ->
+        statement.execute("CREATE DATABASE session")
+      }
+    }
+  }, listOf(Consumer { builder -> builder.setPort(39889) }))
 
-    val connInfo = provider.createNewDatabase()
-    exportPort(log, connInfo)
-    runApplication<PostgresSessionDemoApplication>(*args)
+  val connInfo = provider.createNewDatabase()
+  exportPort(log, connInfo)
+  runApplication<PostgresSessionDemoApplication>(*args)
 }
 
 private fun exportPort(log: Logger, connInfo: ConnectionInfo) {
-    System.setProperty("postgres.port", connInfo.port.toString())
-    log.info("Running with embedded postgres on port: {}", connInfo.port)
+  System.setProperty("postgres.port", connInfo.port.toString())
+  log.info("Running with embedded postgres on port: {}", connInfo.port)
 }

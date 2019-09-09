@@ -5,10 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
 import com.opentable.db.postgres.junit.PreparedDbRule;
-import io.reactiverse.pgclient.PgClient;
-import io.reactiverse.pgclient.PgException;
-import io.reactiverse.pgclient.PgPool;
-import io.reactiverse.pgclient.PgPoolOptions;
+import io.vertx.pgclient.PgException;
+import io.vertx.sqlclient.Pool;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -32,7 +30,7 @@ public class ReactivePostgresSessionRepositoryTest {
 
   private static final String KEY = "key";
   private static final String VALUE = "value";
-  private PgPool pgPool = null;
+  private Pool pool = null;
 
   @ClassRule
   public static final PreparedDbRule embeddedPostgres =
@@ -45,12 +43,12 @@ public class ReactivePostgresSessionRepositoryTest {
 
   @Before
   public void before() {
-    pgPool = pool();
+    pool = pool();
   }
 
   @After
   public void after() {
-    pgPool.close();
+    pool.close();
   }
 
   @Test
@@ -276,19 +274,11 @@ public class ReactivePostgresSessionRepositoryTest {
 
   private ReactivePostgresSessionRepository sessionRepository() {
     return new ReactivePostgresSessionRepository(
-        pgPool, new JdkSerializationStrategy(), Clock.system(ZoneId.systemDefault()));
+        pool, new JdkSerializationStrategy(), Clock.system(ZoneId.systemDefault()));
   }
 
-  private PgPool pool() {
-    PgPoolOptions options =
-        new PgPoolOptions()
-            .setPort(embeddedPostgres.getConnectionInfo().getPort())
-            .setHost("localhost")
-            .setDatabase("template1")
-            .setUser("postgres")
-            .setPassword("postgres")
-            .setMaxSize(5);
-    return PgClient.pool(options);
+  private Pool pool() {
+    return TestPostgresOptions.pool(embeddedPostgres.getConnectionInfo().getPort());
   }
 
   private void setSessionId(PostgresSession anotherSession, String sessionId) {

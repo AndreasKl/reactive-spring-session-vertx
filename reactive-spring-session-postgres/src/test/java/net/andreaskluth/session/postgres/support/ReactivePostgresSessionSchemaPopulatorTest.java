@@ -4,10 +4,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
 import com.opentable.db.postgres.junit.PreparedDbRule;
-import io.reactiverse.pgclient.PgClient;
-import io.reactiverse.pgclient.PgException;
-import io.reactiverse.pgclient.PgPool;
-import io.reactiverse.pgclient.PgPoolOptions;
+import io.vertx.pgclient.PgException;
+import io.vertx.pgclient.PgPool;
+import net.andreaskluth.session.postgres.TestPostgresOptions;
 import org.junit.ClassRule;
 import org.junit.Test;
 import reactor.core.publisher.Mono;
@@ -72,14 +71,6 @@ public class ReactivePostgresSessionSchemaPopulatorTest {
   }
 
   private PgPool pool() {
-    PgPoolOptions options =
-        new PgPoolOptions()
-            .setPort(embeddedPostgres.getConnectionInfo().getPort())
-            .setHost("localhost")
-            .setDatabase("template1")
-            .setUser("postgres")
-            .setPassword("postgres")
-            .setMaxSize(5);
-    return PgClient.pool(options);
+    return TestPostgresOptions.pool(embeddedPostgres.getConnectionInfo().getPort());
   }
 }

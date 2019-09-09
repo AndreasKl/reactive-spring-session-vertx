@@ -2,7 +2,7 @@ package net.andreaskluth.session.postgres.support;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import io.reactiverse.pgclient.PgPool;
+import io.vertx.sqlclient.Pool;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -28,20 +28,20 @@ public class ReactivePostgresSessionSchemaPopulator {
     }
   }
 
-  public static Mono<Void> applyDefaultSchema(PgPool pgPool) {
-    return applySchema(pgPool, parseStatementsFromSchema());
+  public static Mono<Void> applyDefaultSchema(Pool pool) {
+    return applySchema(pool, parseStatementsFromSchema());
   }
 
-  public static Mono<Void> applySchema(PgPool pgPool, String[] statements) {
+  public static Mono<Void> applySchema(Pool pool, String[] statements) {
     Mono<Void> result = Mono.empty();
     for (String statement : statements) {
-      result = result.then(Mono.create(sink -> applyStatement(pgPool, statement, sink)));
+      result = result.then(Mono.create(sink -> applyStatement(pool, statement, sink)));
     }
     return result;
   }
 
-  private static void applyStatement(PgPool pgPool, String statement, MonoSink<Void> sink) {
-    pgPool.query(
+  private static void applyStatement(Pool pool, String statement, MonoSink<Void> sink) {
+    pool.query(
         statement,
         event -> {
           if (event.succeeded()) {

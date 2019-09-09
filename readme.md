@@ -6,8 +6,7 @@ Due to the lack of a distributed reactive Spring Session implementations for rel
 this projects aims to fill the gap with a fully reactive **postgres** Spring Session store.
 
 Instead of faking reactive behaviour by wrapping JDBC into a thread pool,
-the implementation is based on **[reactive-pg-client](https://www.julienviet.com/reactive-pg-client/)**
-and will switch to **[vertx-sql-client](https://github.com/eclipse-vertx/vertx-sql-client)** once it is GA to support MySQL.
+the implementation is based on **[vertx-sql-client](https://github.com/eclipse-vertx/vertx-sql-client)**.
 
 Runs on JDK 11 and JDK 12, if there is a need a JDK 8 version would be possible.
 
@@ -23,26 +22,35 @@ does the cleanup.
 @Import(ReactivePostgresSessionConfiguration::class)
 class PostgresSessionConfiguration {
 
-    @Bean
-    fun pgPoolOptions(): PgPoolOptions =
-        PgPoolOptions()
-            .setHost("localhost")
-            .setPort(5432)
-            .setDatabase("session")
-            .setUser("postgres")
-            .setPassword("postgres")
+  @Bean
+  fun pgConnectOptions(@Value("\${postgres.port}") postgresPort: Int): PgConnectOptions =
+    PgConnectOptions()
+      .setHost("localhost")
+      .setPort(postgresPort)
+      .setDatabase("session")
+      .setUser("postgres")
+      .setPassword("postgres")
+      .setIdleTimeout(300)
+      .setConnectTimeout(500)
 
-    @Bean
-    fun clock(): Clock = Clock.systemUTC()
+  @Bean
+  fun poolOptions(): PoolOptions =
+    PoolOptions()
+      .setMaxSize(5)
+      .setMaxWaitQueueSize(10)
 
-    @Bean(WebHttpHandlerBuilder.WEB_SESSION_MANAGER_BEAN_NAME)
-    fun webSessionManager(repository: ReactiveSessionRepository<out Session>): WebSessionManager {
-        val sessionStore = SpringSessionWebSessionStore(repository)
+  @Bean
+  fun clock(): Clock =
+    Clock.systemUTC()
 
-        val manager = DefaultWebSessionManager()
-        manager.sessionStore = sessionStore
-        return manager
-    }
+  @Bean(WebHttpHandlerBuilder.WEB_SESSION_MANAGER_BEAN_NAME)
+  fun webSessionManager(repository: ReactiveSessionRepository<out Session>): WebSessionManager {
+    val sessionStore = SpringSessionWebSessionStore(repository)
+
+    val manager = DefaultWebSessionManager()
+    manager.sessionStore = sessionStore
+    return manager
+  }
 
 }
 ```
