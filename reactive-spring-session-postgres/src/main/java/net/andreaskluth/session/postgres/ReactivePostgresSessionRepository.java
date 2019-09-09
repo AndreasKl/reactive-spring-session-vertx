@@ -8,14 +8,13 @@ import static net.andreaskluth.session.postgres.ReactivePostgresSessionRepositor
 import static net.andreaskluth.session.postgres.ReactivePostgresSessionRepositoryQueries.SELECT_SQL;
 import static net.andreaskluth.session.postgres.ReactivePostgresSessionRepositoryQueries.UPDATE_SQL;
 
-import io.reactiverse.pgclient.PgPool;
-import io.reactiverse.pgclient.PgResult;
-import io.reactiverse.pgclient.PgRowSet;
-import io.reactiverse.pgclient.Row;
-import io.reactiverse.pgclient.Tuple;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.sqlclient.Pool;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -45,7 +44,7 @@ public class ReactivePostgresSessionRepository
 
   private static final String SEQUENCE_DEFAULT_NAME = "ReactivePostgresSessionRepository";
 
-  private final PgPool pgPool;
+  private final Pool pool;
   private final SerializationStrategy serializationStrategy;
   private final Clock clock;
 
@@ -56,14 +55,14 @@ public class ReactivePostgresSessionRepository
   /**
    * Creates a new instance.
    *
-   * @param pgPool the database pool
+   * @param pool the database pool
    * @param serializationStrategy the {@link SerializationStrategy} to read and write session data
    *     with.
    * @param clock the {@link Clock} to use
    */
   public ReactivePostgresSessionRepository(
-      PgPool pgPool, SerializationStrategy serializationStrategy, Clock clock) {
-    this.pgPool = requireNonNull(pgPool, "pgPool must not be null");
+      Pool pool, SerializationStrategy serializationStrategy, Clock clock) {
+    this.pool = requireNonNull(pool, "pool must not be null");
     this.serializationStrategy =
         requireNonNull(serializationStrategy, "serializationStrategy must not be null");
     this.clock = requireNonNull(clock, "clock must not be null");
@@ -138,11 +137,11 @@ public class ReactivePostgresSessionRepository
         .then();
   }
 
-  private Mono<PgRowSet> insertSessionCore(PostgresSession postgresSession) {
+  private Mono<RowSet> insertSessionCore(PostgresSession postgresSession) {
     return preparedQuery(INSERT_SQL, buildParametersForInsert(postgresSession));
   }
 
-  private Mono<PgRowSet> updateSessionCore(PostgresSession postgresSession) {
+  private Mono<RowSet> updateSessionCore(PostgresSession postgresSession) {
     if (postgresSession.isChanged()) {
       return preparedQuery(UPDATE_SQL, buildParametersForUpdate(postgresSession));
     }
@@ -150,8 +149,8 @@ public class ReactivePostgresSessionRepository
   }
 
   private void handleInsertOrUpdate(
-      PostgresSession session, PgRowSet pgRowSet, SynchronousSink<Object> sink) {
-    if (pgRowSet.rowCount() == 1) {
+      PostgresSession session, RowSet rowSet, SynchronousSink<Object> sink) {
+    if (rowSet.rowCount() == 1) {
       session.clearChangeFlags();
       sink.complete();
       return;
@@ -159,7 +158,7 @@ public class ReactivePostgresSessionRepository
     var ex =
         new ReactivePostgresSessionException(
             "SQLStatement did not return the expected row count of 1, did return "
-                + pgRowSet.rowCount()
+                + rowSet.rowCount()
                 + " inserted/updated records.");
     sink.error(ex);
   }
@@ -169,13 +168,13 @@ public class ReactivePostgresSessionRepository
     requireNonNull(id, "id must not be null");
 
     return preparedQuery(SELECT_SQL, Tuple.of(id))
-        .flatMap(pgRowSet -> Mono.justOrEmpty(mapRowSetToPostgresSession(pgRowSet)))
+        .flatMap(rowSet -> Mono.justOrEmpty(mapRowSetToPostgresSession(rowSet)))
         .filter(postgresSession -> !postgresSession.isExpired())
         .as(addMetricsIfEnabled("findById"));
   }
 
-  private PostgresSession mapRowSetToPostgresSession(PgRowSet pgRowSet) {
-    return pgRowSet.rowCount() >= 1 ? mapRowToPostgresSession(pgRowSet.iterator().next()) : null;
+  private PostgresSession mapRowSetToPostgresSession(RowSet rowSet) {
+    return rowSet.rowCount() >= 1 ? mapRowToPostgresSession(rowSet.iterator().next()) : null;
   }
 
   private PostgresSession mapRowToPostgresSession(Row row) {
@@ -203,7 +202,7 @@ public class ReactivePostgresSessionRepository
     return Mono.defer(
             () ->
                 preparedQuery(DELETE_EXPIRED_SESSIONS_SQL, Tuple.of(clock.millis()))
-                    .map(PgResult::rowCount))
+                    .map(RowSet::rowCount))
         .as(addMetricsIfEnabled("cleanupExpiredSessions"));
   }
 
@@ -214,9 +213,9 @@ public class ReactivePostgresSessionRepository
             : toDecorateWithMetrics;
   }
 
-  private Mono<PgRowSet> preparedQuery(String statement, Tuple parameters) {
+  private Mono<RowSet> preparedQuery(String statement, Tuple parameters) {
     return Mono.create(
-        sink -> pgPool.preparedQuery(statement, parameters, new MonoToVertxHandlerAdapter<>(sink)));
+        sink -> pool.preparedQuery(statement, parameters, new MonoToVertxHandlerAdapter<>(sink)));
   }
 
   private Tuple buildParametersForInsert(PostgresSession postgresSession) {

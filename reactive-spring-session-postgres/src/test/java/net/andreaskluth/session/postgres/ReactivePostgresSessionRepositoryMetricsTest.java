@@ -9,9 +9,7 @@ import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.MockClock;
 import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.reactiverse.pgclient.PgClient;
-import io.reactiverse.pgclient.PgPool;
-import io.reactiverse.pgclient.PgPoolOptions;
+import io.vertx.sqlclient.Pool;
 import java.sql.Connection;
 import java.time.Clock;
 import java.time.ZoneId;
@@ -25,7 +23,7 @@ import org.junit.Test;
 
 public class ReactivePostgresSessionRepositoryMetricsTest {
 
-  private PgPool pgPool = null;
+  private Pool pgPool = null;
 
   @ClassRule
   public static final PreparedDbRule embeddedPostgres =
@@ -90,15 +88,7 @@ public class ReactivePostgresSessionRepositoryMetricsTest {
     return sessionRepository;
   }
 
-  private PgPool pool() {
-    PgPoolOptions options =
-        new PgPoolOptions()
-            .setPort(embeddedPostgres.getConnectionInfo().getPort())
-            .setHost("localhost")
-            .setDatabase("template1")
-            .setUser("postgres")
-            .setPassword("postgres")
-            .setMaxSize(5);
-    return PgClient.pool(options);
+  private Pool pool() {
+    return TestPostgresOptions.pool(embeddedPostgres.getConnectionInfo().getPort());
   }
 }

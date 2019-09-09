@@ -2,9 +2,10 @@ package net.andreaskluth.session.postgres;
 
 import static java.util.Objects.requireNonNull;
 
-import io.reactiverse.pgclient.PgClient;
-import io.reactiverse.pgclient.PgPool;
-import io.reactiverse.pgclient.PgPoolOptions;
+import io.vertx.pgclient.PgConnectOptions;
+import io.vertx.pgclient.PgPool;
+import io.vertx.sqlclient.Pool;
+import io.vertx.sqlclient.PoolOptions;
 import java.time.Clock;
 import java.util.Optional;
 import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
@@ -23,10 +24,13 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
   public static final String DEFAULT_CLEANUP_CRON = "0 * * * * *";
 
   private final Clock clock;
-  private final PgPoolOptions pgPoolOptions;
+  private final PoolOptions poolOptions;
+  private final PgConnectOptions pgConnectOptions;
 
-  public ReactivePostgresSessionConfiguration(PgPoolOptions pgPoolOptions, Optional<Clock> clock) {
-    this.pgPoolOptions = requireNonNull(pgPoolOptions, "pgPoolOptions must not be null");
+  public ReactivePostgresSessionConfiguration(
+      PgConnectOptions pgConnectOptions, PoolOptions poolOptions, Optional<Clock> clock) {
+    this.pgConnectOptions = requireNonNull(pgConnectOptions, "pgConnectOptions must not be null");
+    this.poolOptions = requireNonNull(poolOptions, "poolOptions must not be null");
     this.clock =
         requireNonNull(clock, "clock must not be null").orElseGet(Clock::systemDefaultZone);
   }
@@ -37,14 +41,14 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
   }
 
   @Bean
-  public PgPool pgPool() {
-    return PgClient.pool(pgPoolOptions);
+  public Pool pool() {
+    return PgPool.pool(pgConnectOptions, poolOptions);
   }
 
   @Bean
   public ReactivePostgresSessionRepository reactivePostgresSessionRepository() {
     return new ReactivePostgresSessionRepository(
-        pgPool(), reactivePostgresSerializationStrategy(), clock);
+        pool(), reactivePostgresSerializationStrategy(), clock);
   }
 
   @Override

@@ -42,7 +42,6 @@
 
     <spring.version>5.1.9.RELEASE</spring.version>
     <spring-session-core.version>2.1.8.RELEASE</spring-session-core.version>
-    <reactive-pg-client.version>0.11.4</reactive-pg-client.version>
     <otj-pg-embedded.version>0.13.1</otj-pg-embedded.version>
     <junit.version>4.13-beta-3</junit.version>
     <assertj-core.version>3.13.2</assertj-core.version>
@@ -58,6 +57,7 @@
     <jacoco-maven-plugin.version>0.8.4</jacoco-maven-plugin.version>
     <fmt-maven-plugin.version>2.9</fmt-maven-plugin.version>
     <micrometer-core.version>1.2.0</micrometer-core.version>
+    <vertx-sql-client.version>4.0.0-milestone2</vertx-sql-client.version>
   </properties>
 
   <dependencies>
@@ -77,9 +77,9 @@
       <version>${spring-session-core.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.reactiverse</groupId>
-      <artifactId>reactive-pg-client</artifactId>
-      <version>${reactive-pg-client.version}</version>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-pg-client</artifactId>
+      <version>${vertx-sql-client.version}</version>
       <exclusions>
         <exclusion>
           <groupId>com.fasterxml.jackson.core</groupId>
