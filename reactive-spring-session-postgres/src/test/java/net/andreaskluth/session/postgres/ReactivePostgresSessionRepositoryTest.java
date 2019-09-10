@@ -3,8 +3,8 @@ package net.andreaskluth.session.postgres;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
-import com.opentable.db.postgres.junit.PreparedDbRule;
+import com.opentable.db.postgres.junit5.EmbeddedPostgresExtension;
+import com.opentable.db.postgres.junit5.PreparedDbExtension;
 import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Pool;
 import java.io.Serializable;
@@ -18,41 +18,41 @@ import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.Postg
 import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
 import net.andreaskluth.session.postgres.serializer.SerializationException;
 import net.andreaskluth.session.postgres.support.ReactivePostgresSessionSchemaPopulator;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class ReactivePostgresSessionRepositoryTest {
+class ReactivePostgresSessionRepositoryTest {
 
   private static final String KEY = "key";
   private static final String VALUE = "value";
   private Pool pool = null;
 
-  @ClassRule
-  public static final PreparedDbRule embeddedPostgres =
-      EmbeddedPostgresRules.preparedDatabase(
+  @RegisterExtension
+  static final PreparedDbExtension embeddedPostgres =
+      EmbeddedPostgresExtension.preparedDatabase(
           ds -> {
             try (Connection connection = ds.getConnection()) {
               ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(connection);
             }
           });
 
-  @Before
-  public void before() {
+  @BeforeEach
+  void before() {
     pool = pool();
   }
 
-  @After
-  public void after() {
+  @AfterEach
+  void after() {
     pool.close();
   }
 
   @Test
-  public void saveAndLoadWithAttributes() {
+  void saveAndLoadWithAttributes() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
@@ -69,7 +69,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void duplicateSessionIdsAreNotPermitted() {
+  void duplicateSessionIdsAreNotPermitted() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
     repo.save(session).block();
@@ -82,7 +82,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void saveAndLoadRemovingAttributes() {
+  void saveAndLoadRemovingAttributes() {
     var repo = sessionRepository();
 
     var session = repo.createSession().block();
@@ -102,14 +102,14 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void findUnknownSessionIdShouldReturnNull() {
+  void findUnknownSessionIdShouldReturnNull() {
     var repo = sessionRepository();
     PostgresSession session = repo.findById("unknown").block();
     assertThat(session).isNull();
   }
 
   @Test
-  public void deleteSessionById() {
+  void deleteSessionById() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
     repo.save(session).block();
@@ -121,13 +121,13 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void deleteSessionByIdWithUnknownSessionIdShouldNotCauseAnError() {
+  void deleteSessionByIdWithUnknownSessionIdShouldNotCauseAnError() {
     var repo = sessionRepository();
     repo.deleteById("unknown").block();
   }
 
   @Test
-  public void rotateSessionIdChangesSessionId() {
+  void rotateSessionIdChangesSessionId() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
     session.setAttribute(KEY, VALUE);
@@ -145,7 +145,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void updatingValuesInSession() {
+  void updatingValuesInSession() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
@@ -163,7 +163,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void updatingWithSameValueShouldChangeSession() {
+  void updatingWithSameValueShouldChangeSession() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
@@ -175,7 +175,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void addingNullValueForNewKeyShouldChangeSession() {
+  void addingNullValueForNewKeyShouldChangeSession() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
@@ -186,7 +186,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void storeComplexObjectsInSession() {
+  void storeComplexObjectsInSession() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
@@ -200,7 +200,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void objectsThatAreNotSerializableShouldRaise() {
+  void objectsThatAreNotSerializableShouldRaise() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
@@ -211,7 +211,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void savingMultipleTimes() {
+  void savingMultipleTimes() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
@@ -229,7 +229,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void savingInParallel() {
+  void savingInParallel() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
 
@@ -247,7 +247,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void expiredSessionsCanNotBeRetrieved() {
+  void expiredSessionsCanNotBeRetrieved() {
     var repo = sessionRepository();
     repo.setDefaultMaxInactiveInterval(0);
 
@@ -260,7 +260,7 @@ public class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  public void expiredSessionsArePurgedByCleanup() {
+  void expiredSessionsArePurgedByCleanup() {
     var repo = sessionRepository();
     repo.setDefaultMaxInactiveInterval(0);
 

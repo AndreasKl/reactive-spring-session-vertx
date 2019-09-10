@@ -2,8 +2,8 @@ package net.andreaskluth.session.postgres;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
-import com.opentable.db.postgres.junit.PreparedDbRule;
+import com.opentable.db.postgres.junit5.EmbeddedPostgresExtension;
+import com.opentable.db.postgres.junit5.PreparedDbExtension;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.MockClock;
@@ -16,41 +16,41 @@ import java.time.ZoneId;
 import java.util.Set;
 import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
 import net.andreaskluth.session.postgres.support.ReactivePostgresSessionSchemaPopulator;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class ReactivePostgresSessionRepositoryMetricsTest {
+class ReactivePostgresSessionRepositoryMetricsTest {
 
-  private Pool pgPool = null;
+  private Pool pool = null;
 
-  @ClassRule
-  public static final PreparedDbRule embeddedPostgres =
-      EmbeddedPostgresRules.preparedDatabase(
+  @RegisterExtension
+  static final PreparedDbExtension embeddedPostgres =
+      EmbeddedPostgresExtension.preparedDatabase(
           ds -> {
             try (Connection connection = ds.getConnection()) {
               ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(connection);
             }
           });
 
-  @Before
-  public void before() {
+  @BeforeEach
+  void before() {
     Set<MeterRegistry> registries = Metrics.globalRegistry.getRegistries();
     registries.forEach(Metrics.globalRegistry::remove);
 
-    pgPool = pool();
+    pool = pool();
   }
 
-  @After
-  public void after() {
-    pgPool.close();
+  @AfterEach
+  void after() {
+    pool.close();
 
     Metrics.globalRegistry.close();
   }
 
   @Test
-  public void saveAndLoad() {
+  void saveAndLoad() {
     SimpleMeterRegistry simple = new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
     Metrics.addRegistry(simple);
 
@@ -83,7 +83,7 @@ public class ReactivePostgresSessionRepositoryMetricsTest {
   private ReactivePostgresSessionRepository sessionRepository() {
     var sessionRepository =
         new ReactivePostgresSessionRepository(
-            pgPool, new JdkSerializationStrategy(), Clock.system(ZoneId.systemDefault()));
+            pool, new JdkSerializationStrategy(), Clock.system(ZoneId.systemDefault()));
     sessionRepository.withMetrics(true);
     return sessionRepository;
   }

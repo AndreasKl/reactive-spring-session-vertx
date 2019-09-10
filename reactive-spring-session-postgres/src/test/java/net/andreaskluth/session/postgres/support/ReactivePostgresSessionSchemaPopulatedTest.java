@@ -2,27 +2,27 @@ package net.andreaskluth.session.postgres.support;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-import com.opentable.db.postgres.junit.EmbeddedPostgresRules;
-import com.opentable.db.postgres.junit.PreparedDbRule;
+import com.opentable.db.postgres.junit5.EmbeddedPostgresExtension;
+import com.opentable.db.postgres.junit5.PreparedDbExtension;
 import io.vertx.pgclient.PgException;
 import io.vertx.pgclient.PgPool;
 import net.andreaskluth.session.postgres.TestPostgresOptions;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Mono;
 
-public class ReactivePostgresSessionSchemaPopulatorTest {
+class ReactivePostgresSessionSchemaPopulatedTest {
 
-  @ClassRule
-  public static final PreparedDbRule embeddedPostgres =
-      EmbeddedPostgresRules.preparedDatabase(ds -> {});
+  @RegisterExtension
+  static final PreparedDbExtension embeddedPostgres =
+      EmbeddedPostgresExtension.preparedDatabase(ds -> {});
 
   private static final String[] DEFECTIVE_SCHEMA = {
     "CREATE TABLE demo (id text);", "CREATE TABLE demo (id text);"
   };
 
   @Test
-  public void schemaIsCreated() {
+  void schemaIsCreated() {
     ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(pool()).block();
 
     Mono.create(
@@ -41,7 +41,7 @@ public class ReactivePostgresSessionSchemaPopulatorTest {
   }
 
   @Test
-  public void schemaCanBeAppliedMultipleTimes() {
+  void schemaCanBeAppliedMultipleTimes() {
     ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(pool()).block();
     ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(pool()).block();
     ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(pool()).block();
@@ -62,7 +62,7 @@ public class ReactivePostgresSessionSchemaPopulatorTest {
   }
 
   @Test
-  public void failsIfStatementsCanNotBeExecuted() {
+  void failsIfStatementsCanNotBeExecuted() {
     assertThatThrownBy(
             () ->
                 ReactivePostgresSessionSchemaPopulator.applySchema(pool(), DEFECTIVE_SCHEMA)

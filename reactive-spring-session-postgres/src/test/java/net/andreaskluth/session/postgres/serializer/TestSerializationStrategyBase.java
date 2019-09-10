@@ -8,12 +8,12 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public abstract class TestSerializationStrategyBase {
+abstract class TestSerializationStrategyBase {
 
   @Test
-  public void serializesAndDeserializesSimpleData() {
+  void serializesAndDeserializesSimpleData() {
     var data = strategy().serialize(Map.of("ein", "wert", "noch", "ein wert"));
     var dataMap = strategy().deserialize(data);
 
@@ -21,7 +21,7 @@ public abstract class TestSerializationStrategyBase {
   }
 
   @Test
-  public void serializesAndDeserializesComplexObjects() {
+  void serializesAndDeserializesComplexObjects() {
     var data = strategy().serialize(complexData());
     var dataMap = strategy().deserialize(data);
 
@@ -34,14 +34,14 @@ public abstract class TestSerializationStrategyBase {
   }
 
   @Test
-  public void failsOnNotSerializableObjects() {
+  void failsOnNotSerializableObjects() {
     assertThatThrownBy(
             () -> strategy().serialize(Map.of("fails", new NotSerializable(Instant.now()))))
         .isInstanceOf(SerializationException.class);
   }
 
   @Test
-  public void failsOnNotDeserializableObjects() {
+  void failsOnNotDeserializableObjects() {
     assertThatThrownBy(() -> strategy().deserialize(new byte[] {23, 42}))
         .isInstanceOf(DeserializationException.class);
   }

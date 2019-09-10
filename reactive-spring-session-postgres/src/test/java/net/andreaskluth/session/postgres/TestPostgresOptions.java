@@ -6,6 +6,10 @@ import io.vertx.sqlclient.PoolOptions;
 
 public class TestPostgresOptions {
 
+  private TestPostgresOptions() {
+    // Construction not permitted.
+  }
+
   private static PgConnectOptions pgConnectOptions(int port) {
     return new PgConnectOptions()
         .setPort(port)
