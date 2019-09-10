@@ -1,6 +1,6 @@
 package net.andreaskluth.session.postgres.serializer;
 
-public class JacksonSerializationStrategyTest extends TestSerializationStrategyBase {
+class JacksonSerializationStrategyTest extends TestSerializationStrategyBase {
 
   @Override
   SerializationStrategy strategy() {
