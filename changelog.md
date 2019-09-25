@@ -1,5 +1,8 @@
 # reactive-spring-session-postgres changelog
 
+# 0.0.8-SNAPSHOT
+* Update to vertx-sql-client 4.0.0-milestone3 to mitigate a direct buffer leak
+
 # 0.0.7
 Fixed metric name and tags.
 

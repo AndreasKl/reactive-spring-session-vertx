@@ -137,11 +137,11 @@ public class ReactivePostgresSessionRepository
         .then();
   }
 
-  private Mono<RowSet> insertSessionCore(PostgresSession postgresSession) {
+  private Mono<RowSet<Row>> insertSessionCore(PostgresSession postgresSession) {
     return preparedQuery(INSERT_SQL, buildParametersForInsert(postgresSession));
   }
 
-  private Mono<RowSet> updateSessionCore(PostgresSession postgresSession) {
+  private Mono<RowSet<Row>> updateSessionCore(PostgresSession postgresSession) {
     if (postgresSession.isChanged()) {
       return preparedQuery(UPDATE_SQL, buildParametersForUpdate(postgresSession));
     }
@@ -173,7 +173,7 @@ public class ReactivePostgresSessionRepository
         .as(addMetricsIfEnabled("findById"));
   }
 
-  private PostgresSession mapRowSetToPostgresSession(RowSet rowSet) {
+  private PostgresSession mapRowSetToPostgresSession(RowSet<Row> rowSet) {
     return rowSet.rowCount() >= 1 ? mapRowToPostgresSession(rowSet.iterator().next()) : null;
   }
 
@@ -213,7 +213,7 @@ public class ReactivePostgresSessionRepository
             : toDecorateWithMetrics;
   }
 
-  private Mono<RowSet> preparedQuery(String statement, Tuple parameters) {
+  private Mono<RowSet<Row>> preparedQuery(String statement, Tuple parameters) {
     return Mono.create(
         sink -> pool.preparedQuery(statement, parameters, new MonoToVertxHandlerAdapter<>(sink)));
   }

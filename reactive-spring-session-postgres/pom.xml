@@ -40,7 +40,7 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
 
-    <vertx-sql-client.version>4.0.0-milestone2</vertx-sql-client.version>
+    <vertx-sql-client.version>4.0.0-milestone3</vertx-sql-client.version>
     <spring.version>5.1.9.RELEASE</spring.version>
     <spring-session-core.version>2.1.8.RELEASE</spring-session-core.version>
     <otj-pg-embedded.version>0.13.1</otj-pg-embedded.version>
@@ -48,7 +48,7 @@
     <assertj-core.version>3.13.2</assertj-core.version>
     <slf4j.version>1.7.28</slf4j.version>
     <jackson.version>2.9.9</jackson.version>
-    <jackson-databind.version>2.9.9.3</jackson-databind.version>
+    <jackson-databind.version>2.9.10</jackson-databind.version>
 
     <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
     <maven-javadoc-plugin.version>3.1.1</maven-javadoc-plugin.version>
