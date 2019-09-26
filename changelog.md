@@ -1,7 +1,8 @@
 # reactive-spring-session-postgres changelog
 
-# 0.0.8-SNAPSHOT
+# 0.0.8
 * Update to vertx-sql-client 4.0.0-milestone3 to mitigate a direct buffer leak
+* Update jackson-databind
 
 # 0.0.7
 Fixed metric name and tags.

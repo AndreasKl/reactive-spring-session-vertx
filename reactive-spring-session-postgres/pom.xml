@@ -49,6 +49,7 @@
     <slf4j.version>1.7.28</slf4j.version>
     <jackson.version>2.9.9</jackson.version>
     <jackson-databind.version>2.9.10</jackson-databind.version>
+    <micrometer-core.version>1.2.0</micrometer-core.version>
 
     <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
     <maven-javadoc-plugin.version>3.1.1</maven-javadoc-plugin.version>
@@ -57,9 +58,6 @@
     <nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.4</jacoco-maven-plugin.version>
     <fmt-maven-plugin.version>2.9</fmt-maven-plugin.version>
-    <micrometer-core.version>1.2.0</micrometer-core.version>
-
-
   </properties>
 
   <dependencies>
@@ -175,16 +173,7 @@
           <compilerArgs>
             <arg>-parameters</arg>
             <arg>-Xlint:all</arg>
-            <arg>-XDcompilePolicy=simple</arg>
-            <arg>-Xplugin:ErrorProne</arg>
           </compilerArgs>
-          <annotationProcessorPaths>
-            <path>
-              <groupId>com.google.errorprone</groupId>
-              <artifactId>error_prone_core</artifactId>
-              <version>2.3.3</version>
-            </path>
-          </annotationProcessorPaths>
         </configuration>
       </plugin>
       <plugin>

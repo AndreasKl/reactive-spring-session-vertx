@@ -8,7 +8,7 @@ this projects aims to fill the gap with a fully reactive **postgres** Spring Ses
 Instead of faking reactive behaviour by wrapping JDBC into a thread pool,
 the implementation is based on **[vertx-sql-client](https://github.com/eclipse-vertx/vertx-sql-client)**.
 
-Runs on JDK 11 and JDK 12, if there is a need a JDK 8 version would be possible.
+Runs on JDK 11, 12 and JDK 13, if there is a need a JDK 8 version would be possible.
 
 ## How to use
 A demo project is located under `/webflux-demo-application` written in Kotlin.
