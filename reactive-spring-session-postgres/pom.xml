@@ -8,7 +8,7 @@
   <version>0.0.9-SNAPSHOT</version>
 
   <name>reactive-spring-session-postgres</name>
-  <description>Reactive Spring Session repository for postgres (reactive-pg-client)</description>
+  <description>Reactive Spring Session repository for postgres (vertx-pg-client)</description>
   <url>https://github.com/AndreasKl/reactive-spring-session-postgres</url>
 
   <licenses>
@@ -41,16 +41,17 @@
     <maven.compiler.target>11</maven.compiler.target>
 
     <vertx-sql-client.version>4.0.0-milestone3</vertx-sql-client.version>
-    <spring.version>5.1.9.RELEASE</spring.version>
-    <spring-session-core.version>2.1.8.RELEASE</spring-session-core.version>
-    <otj-pg-embedded.version>0.13.1</otj-pg-embedded.version>
+    <spring.version>5.1.10.RELEASE</spring.version>
+    <spring-session-core.version>2.1.9.RELEASE</spring-session-core.version>
+    <otj-pg-embedded.version>0.13.2</otj-pg-embedded.version>
     <junit-jupiter-api.version>5.5.2</junit-jupiter-api.version>
     <assertj-core.version>3.13.2</assertj-core.version>
     <slf4j.version>1.7.28</slf4j.version>
     <jackson.version>2.9.9</jackson.version>
     <jackson-databind.version>2.9.10</jackson-databind.version>
-    <micrometer-core.version>1.2.0</micrometer-core.version>
+    <micrometer-core.version>1.2.2</micrometer-core.version>
 
+    <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
     <maven-javadoc-plugin.version>3.1.1</maven-javadoc-plugin.version>
     <maven-source-plugin.version>3.1.0</maven-source-plugin.version>
@@ -84,10 +85,6 @@
         <exclusion>
           <groupId>com.fasterxml.jackson.core</groupId>
           <artifactId>jackson-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
-          <artifactId>jackson-databind</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -168,7 +165,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>${maven-compiler-plugin.version}</version>
         <configuration>
           <compilerArgs>
             <arg>-parameters</arg>

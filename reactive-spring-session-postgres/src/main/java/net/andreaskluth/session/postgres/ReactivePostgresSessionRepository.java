@@ -42,15 +42,15 @@ public class ReactivePostgresSessionRepository
   private static final Logger LOGGER =
       LoggerFactory.getLogger(ReactivePostgresSessionRepository.class);
 
-  private static final String SEQUENCE_DEFAULT_NAME = "ReactivePostgresSessionRepository";
+  private static final String METRIC_SEQUENCE_DEFAULT_NAME = "ReactivePostgresSessionRepository";
 
   private final Pool pool;
   private final SerializationStrategy serializationStrategy;
   private final Clock clock;
 
   private boolean enableMetrics = false;
-  private String sequenceName = SEQUENCE_DEFAULT_NAME;
-  private Duration defaultMaxInactiveInterval = Duration.ofSeconds(1800);
+  private String metricSequenceName = METRIC_SEQUENCE_DEFAULT_NAME;
+  private Duration defaultMaxInactiveInterval = Duration.ofMinutes(30);
 
   /**
    * Creates a new instance.
@@ -82,8 +82,8 @@ public class ReactivePostgresSessionRepository
    *
    * @param sequenceName overrides the default sequence name
    */
-  public void setSequenceName(String sequenceName) {
-    this.sequenceName = sequenceName;
+  public void setMetricSequenceName(String sequenceName) {
+    this.metricSequenceName = sequenceName;
   }
 
   /**
@@ -91,11 +91,13 @@ public class ReactivePostgresSessionRepository
    * will be invalidated. A negative time indicates that the session will never timeout. The default
    * is 1800 (30 minutes).
    *
-   * @param defaultMaxInactiveInterval the number of seconds that the {@link Session} should be kept
-   *     alive between client requests.
+   * @param maxInactiveInterval the {@link Duration} that the {@link Session} should be kept alive
+   *     between client requests.
    */
-  public void setDefaultMaxInactiveInterval(int defaultMaxInactiveInterval) {
-    this.defaultMaxInactiveInterval = Duration.ofSeconds(defaultMaxInactiveInterval);
+  public void setDefaultMaxInactiveInterval(Duration maxInactiveInterval) {
+    this.defaultMaxInactiveInterval =
+        requireNonNull(maxInactiveInterval, "maxInactiveInterval must not be null");
+    ;
   }
 
   @Override
@@ -209,7 +211,7 @@ public class ReactivePostgresSessionRepository
   private <T> Function<Mono<T>, Mono<T>> addMetricsIfEnabled(String methodName) {
     return toDecorateWithMetrics ->
         enableMetrics
-            ? toDecorateWithMetrics.name(sequenceName).tag("method", methodName).metrics()
+            ? toDecorateWithMetrics.name(metricSequenceName).tag("method", methodName).metrics()
             : toDecorateWithMetrics;
   }
 
