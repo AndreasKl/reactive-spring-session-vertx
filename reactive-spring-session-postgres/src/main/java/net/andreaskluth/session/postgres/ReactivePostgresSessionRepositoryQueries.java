@@ -53,8 +53,7 @@ public class ReactivePostgresSessionRepositoryQueries {
           + " last_accessed_time, max_inactive_interval "
           + "FROM session WHERE session_id = $1;";
 
-  public static final String DELETE_FROM_SESSION_SQL =
-      "DELETE FROM session WHERE session_id = $1 RETURNING *;";
+  public static final String DELETE_FROM_SESSION_SQL = "DELETE FROM session WHERE session_id = $1;";
 
   public static final String DELETE_EXPIRED_SESSIONS_SQL =
       "DELETE FROM session WHERE expiry_time < $1 AND max_inactive_interval >= 0;";
