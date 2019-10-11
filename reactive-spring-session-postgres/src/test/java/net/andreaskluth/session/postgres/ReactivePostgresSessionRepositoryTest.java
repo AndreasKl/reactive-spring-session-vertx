@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Objects;
@@ -249,7 +250,7 @@ class ReactivePostgresSessionRepositoryTest {
   @Test
   void expiredSessionsCanNotBeRetrieved() {
     var repo = sessionRepository();
-    repo.setDefaultMaxInactiveInterval(0);
+    repo.setDefaultMaxInactiveInterval(Duration.ZERO);
 
     var session = repo.createSession().block();
     repo.save(session).block();
@@ -262,7 +263,7 @@ class ReactivePostgresSessionRepositoryTest {
   @Test
   void expiredSessionsArePurgedByCleanup() {
     var repo = sessionRepository();
-    repo.setDefaultMaxInactiveInterval(0);
+    repo.setDefaultMaxInactiveInterval(Duration.ZERO);
 
     var session = repo.createSession().block();
     repo.save(session).block();
