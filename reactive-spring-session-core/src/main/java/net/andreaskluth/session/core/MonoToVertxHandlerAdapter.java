@@ -10,7 +10,7 @@ public class MonoToVertxHandlerAdapter<T> implements Handler<AsyncResult<T>> {
 
   private final MonoSink<T> sink;
 
-  MonoToVertxHandlerAdapter(MonoSink<T> sink) {
+  public MonoToVertxHandlerAdapter(MonoSink<T> sink) {
     this.sink = requireNonNull(sink, "sink must not be null");
   }
 

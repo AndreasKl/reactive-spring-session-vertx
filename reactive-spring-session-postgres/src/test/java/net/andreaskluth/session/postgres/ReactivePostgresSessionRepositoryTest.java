@@ -16,9 +16,9 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Objects;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.ReactiveSession;
-import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
-import net.andreaskluth.session.postgres.serializer.SerializationException;
-import net.andreaskluth.session.postgres.support.ReactivePostgresSessionSchemaPopulator;
+import net.andreaskluth.session.core.serializer.JdkSerializationStrategy;
+import net.andreaskluth.session.core.serializer.SerializationException;
+import net.andreaskluth.session.postgres.support.ReactiveSessionSchemaPopulator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class ReactivePostgresSessionRepositoryTest {
       EmbeddedPostgresExtension.preparedDatabase(
           ds -> {
             try (Connection connection = ds.getConnection()) {
-              ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(connection);
+              ReactiveSessionSchemaPopulator.applyDefaultSchema(connection);
             }
           });
 

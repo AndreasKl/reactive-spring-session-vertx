@@ -22,8 +22,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import net.andreaskluth.session.core.MonoToVertxHandlerAdapter;
+import net.andreaskluth.session.core.ReactiveSessionException;
 import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.ReactiveSession;
-import net.andreaskluth.session.postgres.serializer.SerializationStrategy;
+import net.andreaskluth.session.core.serializer.SerializationStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.session.ReactiveSessionRepository;
@@ -156,7 +157,7 @@ public class ReactivePostgresSessionRepository
       return;
     }
     var ex =
-        new ReactivePostgresSessionException(
+        new ReactiveSessionException(
             "SQLStatement did not return the expected row count of 1, did return "
                 + rowSet.rowCount()
                 + " inserted/updated records.");
