@@ -1,9 +1,10 @@
 [![Build Status](https://travis-ci.org/AndreasKl/reactive-spring-session-postgres.svg?branch=master)](https://travis-ci.org/AndreasKl/reactive-spring-session-postgres) 
 [![codecov](https://codecov.io/gh/AndreasKl/reactive-spring-session-postgres/branch/master/graph/badge.svg)](https://codecov.io/gh/AndreasKl/reactive-spring-session-postgres)
 [![Maven Central](https://img.shields.io/maven-central/v/net.andreaskluth/reactive-spring-session-postgres.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22net.andreaskluth%22%20AND%20a:%22reactive-spring-session-postgres%22)
-# reactive-spring-session-postgres
+# reactive-spring-session-postgres & reactive-spring-session-mysql
+
 Due to the lack of a distributed reactive Spring Session implementations for relational databases,
-this projects aims to fill the gap with a fully reactive **postgres** Spring Session store.
+this projects aims to fill the gap with a fully reactive **postgres** and **mysql** Spring Session store.
 
 Instead of faking reactive behaviour by wrapping JDBC into a thread pool,
 the implementation is based on **[vertx-sql-client](https://github.com/eclipse-vertx/vertx-sql-client)**.
@@ -54,7 +55,6 @@ class PostgresSessionConfiguration {
 
 }
 ```
-
 
 ## Development State
 **reactive-spring-session-postgres** is used in production **[@REWE digital](https://www.rewe-digital.com/)** for our reactive frontend gateway.
