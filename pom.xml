@@ -15,17 +15,19 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>net.andreaskluth</groupId>
-  <artifactId>reactive-spring-session-postgres-parent</artifactId>
+  <artifactId>reactive-spring-session-parent</artifactId>
   <version>0.0.9-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>reactive-spring-session-postgres</name>
+  <name>reactive-spring-session-parent</name>
   <url>https://github.com/AndreasKl/reactive-spring-session-postgres</url>
-  <description>Parent for reactive Spring Session repository for postgres</description>
+  <description>Parent for reactive Spring Session repository for postgres and mysql</description>
   <inceptionYear>2019</inceptionYear>
 
   <modules>
+    <module>reactive-spring-session-core</module>
     <module>reactive-spring-session-postgres</module>
+    <module>reactive-spring-session-mysql</module>
     <module>webflux-demo-application</module>
   </modules>
 
