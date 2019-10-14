@@ -1,4 +1,4 @@
-package net.andreaskluth.session.postgres;
+package net.andreaskluth.session.core;
 
 public class ReactivePostgresSessionRepositoryQueries {
 
