@@ -8,15 +8,15 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import net.andreaskluth.session.postgres.ReactivePostgresSessionException;
+import net.andreaskluth.session.core.ReactiveSessionException;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 
-public class ReactivePostgresSessionSchemaPopulator {
+public class ReactiveSessionSchemaPopulator {
 
-  private ReactivePostgresSessionSchemaPopulator() {
+  private ReactiveSessionSchemaPopulator() {
     // Construction is not permitted.
   }
 
@@ -54,12 +54,12 @@ public class ReactivePostgresSessionSchemaPopulator {
 
   public static String[] parseStatementsFromSchema() {
     try (InputStream schemaStream =
-        ReactivePostgresSessionSchemaPopulator.class
+        ReactiveSessionSchemaPopulator.class
             .getClassLoader()
             .getResourceAsStream("schema.sql")) {
       return StringUtils.split(StreamUtils.copyToString(schemaStream, UTF_8), ";");
     } catch (IOException e) {
-      throw new ReactivePostgresSessionException("Failed to read schema.sql.", e);
+      throw new ReactiveSessionException("Failed to read schema.sql.", e);
     }
   }
 }

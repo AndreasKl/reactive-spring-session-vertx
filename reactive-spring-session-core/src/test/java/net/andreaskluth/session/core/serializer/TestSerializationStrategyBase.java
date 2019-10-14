@@ -1,4 +1,4 @@
-package net.andreaskluth.session.postgres.serializer;
+package net.andreaskluth.session.core.serializer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -7,6 +7,9 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Map;
+import net.andreaskluth.session.core.serializer.DeserializationException;
+import net.andreaskluth.session.core.serializer.SerializationException;
+import net.andreaskluth.session.core.serializer.SerializationStrategy;
 import org.junit.jupiter.api.Test;
 
 abstract class TestSerializationStrategyBase {

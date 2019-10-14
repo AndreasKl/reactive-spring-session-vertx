@@ -75,11 +75,11 @@ Deploy a RELEASE to **oss.sonatype.org**:
 ```bash
 mvn release:prepare
 
-mvn -P release -pl reactive-spring-session-postgres clean deploy
+mvn -P release clean deploy
 
-mvn -P release -pl reactive-spring-session-postgres  nexus-staging:rc-list
+mvn -P release nexus-staging:rc-list
 
-mvn -P release -pl reactive-spring-session-postgres -DstagingRepositoryId=netandreaskluth-<some-id>  nexus-staging:release
+mvn -P release -DstagingRepositoryId=netandreaskluth-<some-id>  nexus-staging:release
 ```
 
 ## Contributing

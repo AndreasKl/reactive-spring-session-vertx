@@ -23,7 +23,7 @@ class ReactivePostgresSessionSchemaPopulatedTest {
 
   @Test
   void schemaIsCreated() {
-    ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(pool()).block();
+    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
 
     Mono.create(
             sink ->
@@ -42,9 +42,9 @@ class ReactivePostgresSessionSchemaPopulatedTest {
 
   @Test
   void schemaCanBeAppliedMultipleTimes() {
-    ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(pool()).block();
-    ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(pool()).block();
-    ReactivePostgresSessionSchemaPopulator.applyDefaultSchema(pool()).block();
+    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
+    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
+    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
 
     Mono.create(
             sink ->
@@ -65,7 +65,7 @@ class ReactivePostgresSessionSchemaPopulatedTest {
   void failsIfStatementsCanNotBeExecuted() {
     assertThatThrownBy(
             () ->
-                ReactivePostgresSessionSchemaPopulator.applySchema(pool(), DEFECTIVE_SCHEMA)
+                ReactiveSessionSchemaPopulator.applySchema(pool(), DEFECTIVE_SCHEMA)
                     .block())
         .isInstanceOf(PgException.class);
   }

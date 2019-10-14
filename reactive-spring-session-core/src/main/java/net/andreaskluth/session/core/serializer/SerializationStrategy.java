@@ -1,4 +1,4 @@
-package net.andreaskluth.session.postgres.serializer;
+package net.andreaskluth.session.core.serializer;
 
 import java.util.Map;
 
