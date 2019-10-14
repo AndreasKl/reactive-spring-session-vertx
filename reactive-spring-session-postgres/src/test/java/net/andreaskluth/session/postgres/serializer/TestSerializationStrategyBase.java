@@ -3,7 +3,6 @@ package net.andreaskluth.session.postgres.serializer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -70,7 +69,6 @@ abstract class TestSerializationStrategyBase {
     private final Instant instant;
     private final LocalDateTime createdAt;
 
-    @JsonCreator
     public Complex(LocalDateTime createdAt, Instant instant) {
       this.createdAt = createdAt;
       this.instant = instant;
