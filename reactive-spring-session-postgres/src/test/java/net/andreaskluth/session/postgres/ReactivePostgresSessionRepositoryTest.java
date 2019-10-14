@@ -15,7 +15,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Objects;
-import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.PostgresSession;
+import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.ReactiveSession;
 import net.andreaskluth.session.postgres.serializer.JdkSerializationStrategy;
 import net.andreaskluth.session.postgres.serializer.SerializationException;
 import net.andreaskluth.session.postgres.support.ReactivePostgresSessionSchemaPopulator;
@@ -105,7 +105,7 @@ class ReactivePostgresSessionRepositoryTest {
   @Test
   void findUnknownSessionIdShouldReturnNull() {
     var repo = sessionRepository();
-    PostgresSession session = repo.findById("unknown").block();
+    ReactiveSession session = repo.findById("unknown").block();
     assertThat(session).isNull();
   }
 
@@ -282,8 +282,8 @@ class ReactivePostgresSessionRepositoryTest {
     return TestPostgresOptions.pool(embeddedPostgres.getConnectionInfo().getPort());
   }
 
-  private void setSessionId(PostgresSession anotherSession, String sessionId) {
-    Field sessionIdField = ReflectionUtils.findField(PostgresSession.class, "sessionId");
+  private void setSessionId(ReactiveSession anotherSession, String sessionId) {
+    Field sessionIdField = ReflectionUtils.findField(ReactiveSession.class, "sessionId");
     ReflectionUtils.makeAccessible(sessionIdField);
     ReflectionUtils.setField(sessionIdField, anotherSession, sessionId);
   }
