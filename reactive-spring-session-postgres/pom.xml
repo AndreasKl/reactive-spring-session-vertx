@@ -17,30 +17,6 @@
   <description>Reactive Spring Session repository for postgres (vertx-pg-client)</description>
   <url>https://github.com/AndreasKl/reactive-spring-session-postgres</url>
 
-  <licenses>
-    <license>
-      <name>MIT License</name>
-      <url>http://www.opensource.org/licenses/mit-license.php</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <developers>
-    <developer>
-      <name>Andreas Kluth</name>
-      <email>mail@andreaskluth.net</email>
-      <organization>None</organization>
-      <organizationUrl>http://www.andreaskluth.net</organizationUrl>
-    </developer>
-  </developers>
-
-  <scm>
-    <connection>scm:git:git://github.com/AndreasKl/reactive-spring-session-postgres.git</connection>
-    <developerConnection>scm:git:ssh://github.com:AndreasKl/reactive-spring-session-postgres.git</developerConnection>
-    <url>http://github.com/AndreasKl/reactive-spring-session-postgres/tree/master</url>
-    <tag>HEAD</tag>
-  </scm>
-
   <properties>
   </properties>
 
