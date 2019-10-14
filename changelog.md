@@ -1,5 +1,9 @@
 # reactive-spring-session-postgres changelog
 
+# 0.0.9
+* Removed jackson serializer, as this was always of limited value
+* MySQL support
+
 # 0.0.8
 * Update to vertx-sql-client 4.0.0-milestone3 to mitigate a direct buffer leak
 * Update jackson-databind
