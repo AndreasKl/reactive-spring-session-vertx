@@ -25,13 +25,6 @@
   <description>Parent for reactive Spring Session repository for postgres and mysql</description>
   <inceptionYear>2019</inceptionYear>
 
-  <modules>
-    <module>reactive-spring-session-core</module>
-    <module>reactive-spring-session-postgres</module>
-    <module>reactive-spring-session-mysql</module>
-    <module>webflux-demo-application</module>
-  </modules>
-
   <licenses>
     <license>
       <name>MIT License</name>
@@ -40,12 +33,28 @@
     </license>
   </licenses>
 
+  <developers>
+    <developer>
+      <name>Andreas Kluth</name>
+      <email>mail@andreaskluth.net</email>
+      <organization>None</organization>
+      <organizationUrl>http://www.andreaskluth.net</organizationUrl>
+    </developer>
+  </developers>
+
   <scm>
-    <connection>scm:git:git@github.com:AndreasKl/reactive-spring-session-postgres.git</connection>
-    <developerConnection>scm:git:git@github.com:AndreasKl/reactive-spring-session-postgres.git</developerConnection>
-    <url>https://github.com/AndreasKl/reactive-spring-session-postgres/tree/master</url>
+    <connection>scm:git:git://github.com/AndreasKl/reactive-spring-session-postgres.git</connection>
+    <developerConnection>scm:git:ssh://github.com:AndreasKl/reactive-spring-session-postgres.git</developerConnection>
+    <url>http://github.com/AndreasKl/reactive-spring-session-postgres/tree/master</url>
     <tag>HEAD</tag>
   </scm>
+
+  <modules>
+    <module>reactive-spring-session-core</module>
+    <module>reactive-spring-session-postgres</module>
+    <module>reactive-spring-session-mysql</module>
+    <module>webflux-demo-application</module>
+  </modules>
 
   <distributionManagement>
     <snapshotRepository>
