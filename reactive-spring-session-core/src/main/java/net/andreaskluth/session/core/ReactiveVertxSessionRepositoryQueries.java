@@ -1,8 +1,8 @@
 package net.andreaskluth.session.core;
 
-public class ReactivePostgresSessionRepositoryQueries {
+public class ReactiveVertxSessionRepositoryQueries {
 
-  private ReactivePostgresSessionRepositoryQueries() {
+  private ReactiveVertxSessionRepositoryQueries() {
     // Construction not permitted.
   }
 

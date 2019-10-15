@@ -1,12 +1,12 @@
-package net.andreaskluth.session.postgres;
+package net.andreaskluth.session.core;
 
 import static java.util.Objects.requireNonNull;
-import static net.andreaskluth.session.core.ReactivePostgresSessionRepositoryQueries.DELETE_EXPIRED_SESSIONS_SQL;
-import static net.andreaskluth.session.core.ReactivePostgresSessionRepositoryQueries.DELETE_FROM_SESSION_SQL;
-import static net.andreaskluth.session.core.ReactivePostgresSessionRepositoryQueries.INSERT_SQL;
-import static net.andreaskluth.session.core.ReactivePostgresSessionRepositoryQueries.REDUCED_UPDATE_SQL;
-import static net.andreaskluth.session.core.ReactivePostgresSessionRepositoryQueries.SELECT_SQL;
-import static net.andreaskluth.session.core.ReactivePostgresSessionRepositoryQueries.UPDATE_SQL;
+import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.DELETE_EXPIRED_SESSIONS_SQL;
+import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.DELETE_FROM_SESSION_SQL;
+import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.INSERT_SQL;
+import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.REDUCED_UPDATE_SQL;
+import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.SELECT_SQL;
+import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.UPDATE_SQL;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.sqlclient.Pool;
@@ -21,9 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import net.andreaskluth.session.core.MonoToVertxHandlerAdapter;
-import net.andreaskluth.session.core.ReactiveSessionException;
-import net.andreaskluth.session.postgres.ReactivePostgresSessionRepository.ReactiveSession;
+import net.andreaskluth.session.core.ReactiveVertxSessionRepository.ReactiveSession;
 import net.andreaskluth.session.core.serializer.SerializationStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,15 +31,15 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
 
 /**
- * A {@link ReactiveSessionRepository} that is implemented using vert.x reactive postgres client.
+ * A {@link ReactiveSessionRepository} that is implemented using vert.x reactive client.
  */
-public class ReactivePostgresSessionRepository
+public class ReactiveVertxSessionRepository
     implements ReactiveSessionRepository<ReactiveSession> {
 
   private static final Logger LOGGER =
-      LoggerFactory.getLogger(ReactivePostgresSessionRepository.class);
+      LoggerFactory.getLogger(ReactiveVertxSessionRepository.class);
 
-  private static final String METRIC_SEQUENCE_DEFAULT_NAME = "ReactivePostgresSessionRepository";
+  private static final String METRIC_SEQUENCE_DEFAULT_NAME = "ReactiveVertxSessionRepository";
 
   private final Pool pool;
   private final SerializationStrategy serializationStrategy;
@@ -59,7 +57,7 @@ public class ReactivePostgresSessionRepository
    *     with.
    * @param clock the {@link Clock} to use
    */
-  public ReactivePostgresSessionRepository(
+  public ReactiveVertxSessionRepository(
       Pool pool, SerializationStrategy serializationStrategy, Clock clock) {
     this.pool = requireNonNull(pool, "pool must not be null");
     this.serializationStrategy =
@@ -107,7 +105,7 @@ public class ReactivePostgresSessionRepository
 
   @Override
   public Mono<Void> save(ReactiveSession reactiveSession) {
-    requireNonNull(reactiveSession, "postgresSession must not be null");
+    requireNonNull(reactiveSession, "reactiveSession must not be null");
 
     return Mono.defer(
             () ->
@@ -169,16 +167,16 @@ public class ReactivePostgresSessionRepository
     requireNonNull(id, "id must not be null");
 
     return preparedQuery(SELECT_SQL, Tuple.of(id))
-        .flatMap(rowSet -> Mono.justOrEmpty(mapRowSetToPostgresSession(rowSet)))
+        .flatMap(rowSet -> Mono.justOrEmpty(mapRowSetToSession(rowSet)))
         .filter(reactiveSession -> !reactiveSession.isExpired())
         .as(addMetricsIfEnabled("findById"));
   }
 
-  private ReactiveSession mapRowSetToPostgresSession(RowSet<Row> rowSet) {
-    return rowSet.rowCount() >= 1 ? mapRowToPostgresSession(rowSet.iterator().next()) : null;
+  private ReactiveSession mapRowSetToSession(RowSet<Row> rowSet) {
+    return rowSet.rowCount() >= 1 ? mapRowToSession(rowSet.iterator().next()) : null;
   }
 
-  private ReactiveSession mapRowToPostgresSession(Row row) {
+  private ReactiveSession mapRowToSession(Row row) {
     Buffer sessionDataBuffer = row.getBuffer("session_data");
     Map<String, Object> sessionData = byteBufferAsSessionData(sessionDataBuffer);
 
@@ -374,12 +372,12 @@ public class ReactivePostgresSessionRepository
       return isExpired(clock.instant());
     }
 
-    void clearChangeFlags() {
+    public void clearChangeFlags() {
       this.isNew = false;
       this.changed = false;
     }
 
-    boolean isChanged() {
+    public boolean isChanged() {
       return changed;
     }
 
