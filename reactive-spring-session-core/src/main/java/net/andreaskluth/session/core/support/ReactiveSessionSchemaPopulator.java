@@ -1,4 +1,4 @@
-package net.andreaskluth.session.postgres.support;
+package net.andreaskluth.session.core.support;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -54,9 +54,7 @@ public class ReactiveSessionSchemaPopulator {
 
   public static String[] parseStatementsFromSchema() {
     try (InputStream schemaStream =
-        ReactiveSessionSchemaPopulator.class
-            .getClassLoader()
-            .getResourceAsStream("schema.sql")) {
+        ReactiveSessionSchemaPopulator.class.getClassLoader().getResourceAsStream("schema.sql")) {
       return StringUtils.split(StreamUtils.copyToString(schemaStream, UTF_8), ";");
     } catch (IOException e) {
       throw new ReactiveSessionException("Failed to read schema.sql.", e);

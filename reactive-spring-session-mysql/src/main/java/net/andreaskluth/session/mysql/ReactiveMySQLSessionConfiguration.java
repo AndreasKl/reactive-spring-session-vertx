@@ -1,7 +1,9 @@
-package net.andreaskluth.session.postgres;
+package net.andreaskluth.session.mysql;
 
 import static java.util.Objects.requireNonNull;
 
+import io.vertx.mysqlclient.MySQLConnectOptions;
+import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.Pool;
@@ -20,17 +22,17 @@ import reactor.core.scheduler.Schedulers;
 
 @Configuration
 @EnableScheduling
-public class ReactivePostgresSessionConfiguration implements SchedulingConfigurer {
+public class ReactiveMySQLSessionConfiguration implements SchedulingConfigurer {
 
   public static final String DEFAULT_CLEANUP_CRON = "0 * * * * *";
 
   private final Clock clock;
   private final PoolOptions poolOptions;
-  private final PgConnectOptions pgConnectOptions;
+  private final MySQLConnectOptions connectOptions;
 
-  public ReactivePostgresSessionConfiguration(
-      PgConnectOptions pgConnectOptions, PoolOptions poolOptions, Optional<Clock> clock) {
-    this.pgConnectOptions = requireNonNull(pgConnectOptions, "pgConnectOptions must not be null");
+  public ReactiveMySQLSessionConfiguration(
+      MySQLConnectOptions connectOptions, PoolOptions poolOptions, Optional<Clock> clock) {
+    this.connectOptions = requireNonNull(connectOptions, "connectOptions must not be null");
     this.poolOptions = requireNonNull(poolOptions, "poolOptions must not be null");
     this.clock =
         requireNonNull(clock, "clock must not be null").orElseGet(Clock::systemDefaultZone);
@@ -43,14 +45,14 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
 
   @Bean
   public Pool pool() {
-    return PgPool.pool(pgConnectOptions, poolOptions);
+    return MySQLPool.pool(connectOptions, poolOptions);
   }
 
   @Bean
   public ReactiveVertxSessionRepository reactivePostgresSessionRepository() {
     ReactiveVertxSessionRepository reactiveVertxSessionRepository = new ReactiveVertxSessionRepository(
         pool(), reactiveSerializationStrategy(), clock);
-    reactiveVertxSessionRepository.setMetricSequenceName("ReactivePostgresSessionRepository");
+    reactiveVertxSessionRepository.setMetricSequenceName("ReactiveMySQLSessionRepository");
     return reactiveVertxSessionRepository;
   }
 

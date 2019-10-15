@@ -40,7 +40,7 @@
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-pg-client</artifactId>
+      <artifactId>vertx-mysql-client</artifactId>
       <exclusions>
         <exclusion>
           <groupId>com.fasterxml.jackson.core</groupId>
