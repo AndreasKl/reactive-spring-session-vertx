@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/AndreasKl/reactive-spring-session-postgres.svg?branch=master)](https://travis-ci.org/AndreasKl/reactive-spring-session-postgres) 
-[![codecov](https://codecov.io/gh/AndreasKl/reactive-spring-session-postgres/branch/master/graph/badge.svg)](https://codecov.io/gh/AndreasKl/reactive-spring-session-postgres)
 [![Maven Central](https://img.shields.io/maven-central/v/net.andreaskluth/reactive-spring-session-postgres.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22net.andreaskluth%22%20AND%20a:%22reactive-spring-session-postgres%22)
 # reactive-spring-session-postgres
 
@@ -59,7 +58,7 @@ class PostgresSessionConfiguration {
 }
 ```
 
-## Development State
+## Is this production ready?
 **reactive-spring-session-postgres** is used in production **[@REWE digital](https://www.rewe-digital.com/)** for our reactive frontend gateway.
 
 ## Build
