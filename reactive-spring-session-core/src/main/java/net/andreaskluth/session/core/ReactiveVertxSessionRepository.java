@@ -1,12 +1,6 @@
 package net.andreaskluth.session.core;
 
 import static java.util.Objects.requireNonNull;
-import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.DELETE_EXPIRED_SESSIONS_SQL;
-import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.DELETE_FROM_SESSION_SQL;
-import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.INSERT_SQL;
-import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.REDUCED_UPDATE_SQL;
-import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.SELECT_SQL;
-import static net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries.UPDATE_SQL;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.sqlclient.Pool;
@@ -30,11 +24,8 @@ import org.springframework.session.Session;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
 
-/**
- * A {@link ReactiveSessionRepository} that is implemented using vert.x reactive client.
- */
-public class ReactiveVertxSessionRepository
-    implements ReactiveSessionRepository<ReactiveSession> {
+/** A {@link ReactiveSessionRepository} that is implemented using vert.x reactive client. */
+public class ReactiveVertxSessionRepository implements ReactiveSessionRepository<ReactiveSession> {
 
   private static final Logger LOGGER =
       LoggerFactory.getLogger(ReactiveVertxSessionRepository.class);
@@ -42,6 +33,7 @@ public class ReactiveVertxSessionRepository
   private static final String METRIC_SEQUENCE_DEFAULT_NAME = "ReactiveVertxSessionRepository";
 
   private final Pool pool;
+  private ReactiveVertxSessionRepositoryQueries repositoryQueries;
   private final SerializationStrategy serializationStrategy;
   private final Clock clock;
 
@@ -58,8 +50,13 @@ public class ReactiveVertxSessionRepository
    * @param clock the {@link Clock} to use
    */
   public ReactiveVertxSessionRepository(
-      Pool pool, SerializationStrategy serializationStrategy, Clock clock) {
+      Pool pool,
+      ReactiveVertxSessionRepositoryQueries repositoryQueries,
+      SerializationStrategy serializationStrategy,
+      Clock clock) {
     this.pool = requireNonNull(pool, "pool must not be null");
+    this.repositoryQueries =
+        requireNonNull(repositoryQueries, "repositoryQueries must not be null");
     this.serializationStrategy =
         requireNonNull(serializationStrategy, "serializationStrategy must not be null");
     this.clock = requireNonNull(clock, "clock must not be null");
@@ -137,14 +134,16 @@ public class ReactiveVertxSessionRepository
   }
 
   private Mono<RowSet<Row>> insertSessionCore(ReactiveSession reactiveSession) {
-    return preparedQuery(INSERT_SQL, buildParametersForInsert(reactiveSession));
+    return preparedQuery(repositoryQueries.insertSql(), buildParametersForInsert(reactiveSession));
   }
 
   private Mono<RowSet<Row>> updateSessionCore(ReactiveSession reactiveSession) {
     if (reactiveSession.isChanged()) {
-      return preparedQuery(UPDATE_SQL, buildParametersForUpdate(reactiveSession));
+      return preparedQuery(
+          repositoryQueries.updateSql(), buildParametersForUpdate(reactiveSession));
     }
-    return preparedQuery(REDUCED_UPDATE_SQL, buildReducedParametersForUpdate(reactiveSession));
+    return preparedQuery(
+        repositoryQueries.reducedUpdateSql(), buildReducedParametersForUpdate(reactiveSession));
   }
 
   private void handleInsertOrUpdate(
@@ -166,14 +165,14 @@ public class ReactiveVertxSessionRepository
   public Mono<ReactiveSession> findById(String id) {
     requireNonNull(id, "id must not be null");
 
-    return preparedQuery(SELECT_SQL, Tuple.of(id))
+    return preparedQuery(repositoryQueries.selectSql(), Tuple.of(id))
         .flatMap(rowSet -> Mono.justOrEmpty(mapRowSetToSession(rowSet)))
         .filter(reactiveSession -> !reactiveSession.isExpired())
         .as(addMetricsIfEnabled("findById"));
   }
 
   private ReactiveSession mapRowSetToSession(RowSet<Row> rowSet) {
-    return rowSet.rowCount() >= 1 ? mapRowToSession(rowSet.iterator().next()) : null;
+    return rowSet.size() >= 1 ? mapRowToSession(rowSet.iterator().next()) : null;
   }
 
   private ReactiveSession mapRowToSession(Row row) {
@@ -182,7 +181,7 @@ public class ReactiveVertxSessionRepository
 
     return new ReactiveSession(
         clock,
-        row.getUUID("id"),
+        tryToObtainUUID(row, "id"),
         row.getString("session_id"),
         sessionData,
         Instant.ofEpochMilli(row.getLong("creation_time")),
@@ -190,17 +189,28 @@ public class ReactiveVertxSessionRepository
         Duration.ofSeconds(row.getInteger("max_inactive_interval")));
   }
 
+  private UUID tryToObtainUUID(Row row, String fieldName) {
+    // FIXME: Until vertx-mysql does support UUIDs this artistic/pragmatic workaround exists.
+    try {
+      return row.getUUID(fieldName);
+    } catch (UnsupportedOperationException e) {
+      return UUID.fromString(row.getString(fieldName));
+    }
+  }
+
   @Override
   public Mono<Void> deleteById(String id) {
     requireNonNull(id, "id must not be null");
-    return Mono.defer(() -> preparedQuery(DELETE_FROM_SESSION_SQL, Tuple.of(id)).then())
+    return Mono.defer(
+            () -> preparedQuery(repositoryQueries.deleteFromSessionSql(), Tuple.of(id)).then())
         .as(addMetricsIfEnabled("deleteById"));
   }
 
   public Mono<Integer> cleanupExpiredSessions() {
     return Mono.defer(
             () ->
-                preparedQuery(DELETE_EXPIRED_SESSIONS_SQL, Tuple.of(clock.millis()))
+                preparedQuery(
+                        repositoryQueries.deleteExpiredSessionsSql(), Tuple.of(clock.millis()))
                     .map(RowSet::rowCount))
         .as(addMetricsIfEnabled("cleanupExpiredSessions"));
   }
@@ -230,21 +240,21 @@ public class ReactiveVertxSessionRepository
 
   private Tuple buildParametersForUpdate(ReactiveSession reactiveSession) {
     return Tuple.of(
-        reactiveSession.internalPrimaryKey,
         reactiveSession.getId(),
         sessionDataAsByteBuffer(reactiveSession.sessionData),
         reactiveSession.getLastAccessedTime().toEpochMilli(),
         reactiveSession.getExpiryTime().toEpochMilli(),
-        (int) reactiveSession.getMaxInactiveInterval().getSeconds());
+        (int) reactiveSession.getMaxInactiveInterval().getSeconds(),
+        reactiveSession.internalPrimaryKey);
   }
 
   private Tuple buildReducedParametersForUpdate(ReactiveSession reactiveSession) {
     return Tuple.of(
-        reactiveSession.internalPrimaryKey,
         reactiveSession.getId(),
         reactiveSession.getLastAccessedTime().toEpochMilli(),
         reactiveSession.getExpiryTime().toEpochMilli(),
-        (int) reactiveSession.getMaxInactiveInterval().getSeconds());
+        (int) reactiveSession.getMaxInactiveInterval().getSeconds(),
+        reactiveSession.internalPrimaryKey);
   }
 
   private Buffer sessionDataAsByteBuffer(Map<String, Object> sessionData) {
@@ -392,5 +402,4 @@ public class ReactiveVertxSessionRepository
       return now.minus(maxInactiveInterval).compareTo(lastAccessedTime) >= 0;
     }
   }
-
 }

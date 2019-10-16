@@ -4,13 +4,12 @@ import static java.util.Objects.requireNonNull;
 
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;
-import io.vertx.pgclient.PgConnectOptions;
-import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import java.time.Clock;
 import java.util.Optional;
 import net.andreaskluth.session.core.ReactiveVertxSessionRepository;
+import net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries;
 import net.andreaskluth.session.core.serializer.JdkSerializationStrategy;
 import net.andreaskluth.session.core.serializer.SerializationStrategy;
 import org.springframework.context.annotation.Bean;
@@ -50,8 +49,12 @@ public class ReactiveMySQLSessionConfiguration implements SchedulingConfigurer {
 
   @Bean
   public ReactiveVertxSessionRepository reactivePostgresSessionRepository() {
-    ReactiveVertxSessionRepository reactiveVertxSessionRepository = new ReactiveVertxSessionRepository(
-        pool(), reactiveSerializationStrategy(), clock);
+    ReactiveVertxSessionRepository reactiveVertxSessionRepository =
+        new ReactiveVertxSessionRepository(
+            pool(),
+            new ReactiveMySQLSessionRepositoryQueries(),
+            reactiveSerializationStrategy(),
+            clock);
     reactiveVertxSessionRepository.setMetricSequenceName("ReactiveMySQLSessionRepository");
     return reactiveVertxSessionRepository;
   }

@@ -1,15 +1,23 @@
 [![Build Status](https://travis-ci.org/AndreasKl/reactive-spring-session-postgres.svg?branch=master)](https://travis-ci.org/AndreasKl/reactive-spring-session-postgres) 
 [![codecov](https://codecov.io/gh/AndreasKl/reactive-spring-session-postgres/branch/master/graph/badge.svg)](https://codecov.io/gh/AndreasKl/reactive-spring-session-postgres)
 [![Maven Central](https://img.shields.io/maven-central/v/net.andreaskluth/reactive-spring-session-postgres.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22net.andreaskluth%22%20AND%20a:%22reactive-spring-session-postgres%22)
-# reactive-spring-session-postgres & reactive-spring-session-mysql
+# reactive-spring-session-postgres
 
 Due to the lack of a distributed reactive Spring Session implementations for relational databases,
-this projects aims to fill the gap with a fully reactive **postgres** and **mysql** Spring Session store.
+this projects aims to fill the gap with a fully reactive **postgres** Spring Session store.
 
 Instead of faking reactive behaviour by wrapping JDBC into a thread pool,
 the implementation is based on **[vertx-sql-client](https://github.com/eclipse-vertx/vertx-sql-client)**.
 
 Runs on JDK 11, 12 and JDK 13, if there is a need a JDK 8 version would be possible.
+
+### On MySQL
+The MySQL flavour is currently work in progress. GCP supports only MySQL 5.7 (GA October 21, 2015),
+therefore support for simple features like UUID, CTEs is missing.
+
+I'm working on mitigating those issues, without sacrificing the postgres performance.
+
+**So don't use reactive-spring-session-mysql for production environments, use the battle tested reactive-spring-session-postgres.**
 
 ## How to use
 A demo project is located under `/webflux-demo-application` written in Kotlin.
