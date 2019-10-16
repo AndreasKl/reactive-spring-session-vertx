@@ -1,4 +1,4 @@
-package net.andreaskluth.session.mysql;
+package net.andreaskluth.session.mysql.testsupport;
 
 import static com.wix.mysql.EmbeddedMysql.anEmbeddedMysql;
 import static com.wix.mysql.config.MysqldConfig.aMysqldConfig;

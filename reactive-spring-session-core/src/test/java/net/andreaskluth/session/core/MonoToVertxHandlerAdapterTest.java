@@ -26,10 +26,10 @@ class MonoToVertxHandlerAdapterTest {
     var booleanFuture = new FutureFactoryImpl().<Boolean>failedFuture(new IllegalStateException());
 
     Mono.<Boolean>create(
-        monoSink -> {
-          var adapter = new MonoToVertxHandlerAdapter<>(monoSink);
-          adapter.handle(booleanFuture);
-        })
+            monoSink -> {
+              var adapter = new MonoToVertxHandlerAdapter<>(monoSink);
+              adapter.handle(booleanFuture);
+            })
         .as(StepVerifier::create)
         .verifyError();
   }

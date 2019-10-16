@@ -1,25 +1,22 @@
-package net.andreaskluth.session.postgres.support;
+package net.andreaskluth.session.mysql.support;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-import com.opentable.db.postgres.junit5.EmbeddedPostgresExtension;
-import com.opentable.db.postgres.junit5.PreparedDbExtension;
-import io.vertx.pgclient.PgException;
-import io.vertx.pgclient.PgPool;
+import io.vertx.mysqlclient.MySQLException;
+import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import net.andreaskluth.session.core.MonoToVertxHandlerAdapter;
 import net.andreaskluth.session.core.support.ReactiveSessionSchemaPopulator;
-import net.andreaskluth.session.postgres.TestPostgresOptions;
+import net.andreaskluth.session.mysql.TestMySQLOptions;
+import net.andreaskluth.session.mysql.testsupport.MySQLDbExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Mono;
 
-class ReactivePostgresSessionSchemaPopulatedTest {
+class ReactiveMySQLSessionSchemaPopulatedTest {
 
-  @RegisterExtension
-  static final PreparedDbExtension embeddedPostgres =
-      EmbeddedPostgresExtension.preparedDatabase(ds -> {});
+  @RegisterExtension static final MySQLDbExtension embeddedMySQL = new MySQLDbExtension();
 
   private static final String[] DEFECTIVE_SCHEMA = {
     "CREATE TABLE demo (id text);", "CREATE TABLE demo (id text);"
@@ -27,20 +24,13 @@ class ReactivePostgresSessionSchemaPopulatedTest {
 
   @Test
   void schemaIsCreated() {
-    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
-
     Mono.<RowSet<Row>>create(
             sink -> {
               var adapter = new MonoToVertxHandlerAdapter<>(sink);
-              pool().query("SELECT * FROM session", adapter::handle);
+              pool().query("DROP TABLE IF EXISTS session", adapter::handle);
             })
         .block();
-  }
 
-  @Test
-  void schemaCanBeAppliedMultipleTimes() {
-    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
-    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
     ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
 
     Mono.<RowSet<Row>>create(
@@ -55,10 +45,10 @@ class ReactivePostgresSessionSchemaPopulatedTest {
   void failsIfStatementsCanNotBeExecuted() {
     assertThatThrownBy(
             () -> ReactiveSessionSchemaPopulator.applySchema(pool(), DEFECTIVE_SCHEMA).block())
-        .isInstanceOf(PgException.class);
+        .isInstanceOf(MySQLException.class);
   }
 
-  private PgPool pool() {
-    return TestPostgresOptions.pool(embeddedPostgres.getConnectionInfo().getPort());
+  private MySQLPool pool() {
+    return TestMySQLOptions.pool(embeddedMySQL.getPort());
   }
 }
