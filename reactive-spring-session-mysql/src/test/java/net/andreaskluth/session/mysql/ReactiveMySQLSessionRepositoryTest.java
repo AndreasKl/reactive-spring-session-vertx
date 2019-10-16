@@ -221,7 +221,6 @@ class ReactiveMySQLSessionRepositoryTest {
   }
 
   @Test
-  @Disabled
   void savingInParallel() {
     var repo = sessionRepository();
     var session = repo.createSession().block();
