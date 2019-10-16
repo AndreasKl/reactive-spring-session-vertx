@@ -89,4 +89,14 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.coveo</groupId>
+        <artifactId>fmt-maven-plugin</artifactId>
+        <version>${fmt-maven-plugin.version}</version>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
