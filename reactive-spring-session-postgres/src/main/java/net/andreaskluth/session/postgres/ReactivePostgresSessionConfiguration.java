@@ -9,6 +9,7 @@ import io.vertx.sqlclient.PoolOptions;
 import java.time.Clock;
 import java.util.Optional;
 import net.andreaskluth.session.core.ReactiveVertxSessionRepository;
+import net.andreaskluth.session.core.ReactiveVertxSessionRepositoryQueries;
 import net.andreaskluth.session.core.serializer.JdkSerializationStrategy;
 import net.andreaskluth.session.core.serializer.SerializationStrategy;
 import org.springframework.context.annotation.Bean;
@@ -48,10 +49,15 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
 
   @Bean
   public ReactiveVertxSessionRepository reactivePostgresSessionRepository() {
-    ReactiveVertxSessionRepository reactiveVertxSessionRepository = new ReactiveVertxSessionRepository(
-        pool(), reactiveSerializationStrategy(), clock);
+    ReactiveVertxSessionRepository reactiveVertxSessionRepository =
+        new ReactiveVertxSessionRepository(
+            pool(), queries(), reactiveSerializationStrategy(), clock);
     reactiveVertxSessionRepository.setMetricSequenceName("ReactivePostgresSessionRepository");
     return reactiveVertxSessionRepository;
+  }
+
+  private ReactiveVertxSessionRepositoryQueries queries() {
+    return new ReactivePostgresSessionRepositoryQueries();
   }
 
   @Override

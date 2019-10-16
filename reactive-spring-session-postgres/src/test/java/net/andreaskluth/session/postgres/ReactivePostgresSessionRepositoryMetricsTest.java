@@ -84,7 +84,10 @@ class ReactivePostgresSessionRepositoryMetricsTest {
   private ReactiveVertxSessionRepository sessionRepository() {
     var sessionRepository =
         new ReactiveVertxSessionRepository(
-            pool, new JdkSerializationStrategy(), Clock.system(ZoneId.systemDefault()));
+            pool,
+            new ReactivePostgresSessionRepositoryQueries(),
+            new JdkSerializationStrategy(),
+            Clock.system(ZoneId.systemDefault()));
     sessionRepository.withMetrics(true);
     sessionRepository.setMetricSequenceName("ReactivePostgresSessionRepository");
     return sessionRepository;
