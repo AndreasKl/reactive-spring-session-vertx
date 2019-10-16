@@ -146,7 +146,8 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
         repositoryQueries.reducedUpdateSql(), buildReducedParametersForUpdate(reactiveSession));
   }
 
-  private void handleInsert(ReactiveSession session, RowSet<?> rowSet, SynchronousSink<Object> sink) {
+  private void handleInsert(
+      ReactiveSession session, RowSet<?> rowSet, SynchronousSink<Object> sink) {
     if (rowSet.rowCount() == 1) {
       session.clearChangeFlags();
       sink.complete();
@@ -160,7 +161,8 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
     sink.error(ex);
   }
 
-  private void handleUpdate(ReactiveSession session, RowSet<?> rowSet, SynchronousSink<Object> sink) {
+  private void handleUpdate(
+      ReactiveSession session, RowSet<?> rowSet, SynchronousSink<Object> sink) {
     // WARNING: Due to the connection flag CLIENT_FOUND_ROWS not being the default for mysql,
     // when there is no data in tuple to update but the update succeeds MySQL returns zero.
     if (rowSet.rowCount() >= 0) {

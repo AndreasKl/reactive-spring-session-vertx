@@ -1,4 +1,4 @@
-CREATE TABLE session (
+CREATE TABLE IF NOT EXISTS session (
   id VARCHAR(36) PRIMARY KEY,
   session_id VARCHAR(36) NOT NULL,
   session_data BLOB,
