@@ -12,12 +12,7 @@ the implementation is based on **[vertx-sql-client](https://github.com/eclipse-v
 Runs on JDK 11, 12 and JDK 13, if there is a need a JDK 8 version would be possible.
 
 ### On MySQL
-The MySQL flavour is currently work in progress. GCP supports only MySQL 5.7 (GA October 21, 2015),
-therefore support for simple features like UUID, CTEs is missing.
-
-I'm working on mitigating those issues, without sacrificing the postgres performance.
-
-**So don't use reactive-spring-session-mysql for production environments, use the battle tested reactive-spring-session-postgres.**
+The MySQL flavour is currently work in progress, compatible with MySQL 5.7+. It is fully working but not battle tested on production like the postgres flavour.
 
 ## How to use
 A demo project is located under `/webflux-demo-application` written in Kotlin.

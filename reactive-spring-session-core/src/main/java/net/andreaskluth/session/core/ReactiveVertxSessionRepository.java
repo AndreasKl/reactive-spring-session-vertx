@@ -117,7 +117,7 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
       LOGGER.debug("Insert new session with id: {}", reactiveSession.sessionId);
     }
     return insertSessionCore(reactiveSession)
-        .handle((rows, sink) -> handleInsertOrUpdate(reactiveSession, rows, sink))
+        .handle((rows, sink) -> handleInsert(reactiveSession, rows, sink))
         .then();
   }
 
@@ -129,7 +129,7 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
           reactiveSession.changed);
     }
     return updateSessionCore(reactiveSession)
-        .handle((rows, sink) -> handleInsertOrUpdate(reactiveSession, rows, sink))
+        .handle((rows, sink) -> handleUpdate(reactiveSession, rows, sink))
         .then();
   }
 
@@ -146,8 +146,7 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
         repositoryQueries.reducedUpdateSql(), buildReducedParametersForUpdate(reactiveSession));
   }
 
-  private void handleInsertOrUpdate(
-      ReactiveSession session, RowSet rowSet, SynchronousSink<Object> sink) {
+  private void handleInsert(ReactiveSession session, RowSet<?> rowSet, SynchronousSink<Object> sink) {
     if (rowSet.rowCount() == 1) {
       session.clearChangeFlags();
       sink.complete();
@@ -155,7 +154,23 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
     }
     var ex =
         new ReactiveSessionException(
-            "SQLStatement did not return the expected row count of 1, did return "
+            "SQL insert statement did not return the expected row count of 1, did return "
+                + rowSet.rowCount()
+                + " inserted/updated records.");
+    sink.error(ex);
+  }
+
+  private void handleUpdate(ReactiveSession session, RowSet<?> rowSet, SynchronousSink<Object> sink) {
+    // WARNING: Due to the connection flag CLIENT_FOUND_ROWS not being the default for mysql,
+    // when there is no data in tuple to update but the update succeeds MySQL returns zero.
+    if (rowSet.rowCount() >= 0) {
+      session.clearChangeFlags();
+      sink.complete();
+      return;
+    }
+    var ex =
+        new ReactiveSessionException(
+            "SQL update statement did not return the expected row count, did return "
                 + rowSet.rowCount()
                 + " inserted/updated records.");
     sink.error(ex);
