@@ -28,7 +28,7 @@
 
     <kotlin.version>1.3.50</kotlin.version>
 
-    <otj-pg-embedded.version>0.13.2</otj-pg-embedded.version>
+    <otj-pg-embedded.version>0.13.3</otj-pg-embedded.version>
     <jacoco-maven-plugin.version>0.8.4</jacoco-maven-plugin.version>
   </properties>
 
