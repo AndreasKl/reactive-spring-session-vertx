@@ -71,7 +71,7 @@
     <vertx-sql-client.version>4.0.0-milestone3</vertx-sql-client.version>
     <jackson.version>2.9.9</jackson.version>
     <spring.version>5.1.10.RELEASE</spring.version>
-    <spring-session-core.version>2.1.9.RELEASE</spring-session-core.version>
+    <spring-session-core.version>2.2.0.RELEASE</spring-session-core.version>
 
     <otj-pg-embedded.version>0.13.2</otj-pg-embedded.version>
     <wix-embedded-mysql.version>4.6.0</wix-embedded-mysql.version>
