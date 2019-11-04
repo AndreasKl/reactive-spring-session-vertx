@@ -1,5 +1,7 @@
 # reactive-spring-session-postgres changelog
 
+# 0.0.10
+
 # 0.0.9
 * Removed jackson serializer, as this was always of limited value
 * MySQL support

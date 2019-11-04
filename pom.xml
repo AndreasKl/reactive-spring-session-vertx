@@ -16,7 +16,7 @@
 
   <groupId>net.andreaskluth</groupId>
   <artifactId>reactive-spring-session-parent</artifactId>
-  <version>0.0.9</version>
+  <version>0.0.10-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>reactive-spring-session-parent</name>
@@ -42,10 +42,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://github.com/AndreasKl/reactive-spring-session-postgres.git</connection>
-    <developerConnection>scm:git:ssh://github.com:AndreasKl/reactive-spring-session-postgres.git</developerConnection>
+    <connection>scm:git:git@github.com:AndreasKl/reactive-spring-session-postgres.git</connection>
+    <developerConnection>scm:git:git@github.com:AndreasKl/reactive-spring-session-postgres.git</developerConnection>
     <url>http://github.com/AndreasKl/reactive-spring-session-postgres/tree/master</url>
-    <tag>reactive-spring-session-parent-0.0.9</tag>
   </scm>
 
   <modules>
