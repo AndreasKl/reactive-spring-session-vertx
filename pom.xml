@@ -87,7 +87,7 @@
     <nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
     <fmt-maven-plugin.version>2.9</fmt-maven-plugin.version>
-    <reactor-test.version>3.3.2.RELEASE</reactor-test.version>
+    <reactor-test.version>3.3.3.RELEASE</reactor-test.version>
   </properties>
 
   <dependencyManagement>
