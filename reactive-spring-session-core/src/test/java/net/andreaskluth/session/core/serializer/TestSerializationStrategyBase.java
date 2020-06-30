@@ -52,7 +52,7 @@ abstract class TestSerializationStrategyBase {
   }
 
   private Map<String, Object> complexData() {
-    HashMap<String, Object> map = new HashMap<>();
+    Map<String, Object> map = new HashMap<>();
     map.put("complex", new Complex(LocalDateTime.MAX, Instant.MIN));
     map.put("started", System.nanoTime());
     return map;

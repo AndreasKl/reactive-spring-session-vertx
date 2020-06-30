@@ -8,6 +8,8 @@ import com.opentable.db.postgres.junit5.PreparedDbExtension;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Pool;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -18,6 +20,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import net.andreaskluth.session.core.MonoToVertxHandlerAdapter;
 import net.andreaskluth.session.core.ReactiveVertxSessionRepository;
 import net.andreaskluth.session.core.ReactiveVertxSessionRepository.ReactiveSession;
 import net.andreaskluth.session.core.serializer.DeserializationException;
@@ -36,6 +39,8 @@ class ReactivePostgresSessionRepositoryTest {
 
   private static final String KEY = "key";
   private static final String VALUE = "value";
+  public static final String UPDATE_SESSION_DATA_QUERY =
+      "UPDATE session SET session_data = $1 WHERE session_id = $2;";
   private Pool pool = null;
 
   @RegisterExtension
@@ -325,13 +330,13 @@ class ReactivePostgresSessionRepositoryTest {
     ReflectionUtils.setField(sessionIdField, anotherSession, sessionId);
   }
 
-  private void messWithSessionData(ReactiveSession session)
-      throws ExecutionException, InterruptedException {
-    pool.preparedQuery("UPDATE session SET session_data = $1 WHERE session_id = $2;")
-        .execute(Tuple.of(Buffer.buffer(new byte[] {1, 2}), session.getId()))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get();
+  private void messWithSessionData(ReactiveSession session) {
+    Tuple parameters = Tuple.of(Buffer.buffer(new byte[] {1, 2}), session.getId());
+    Mono.<RowSet<Row>>create(
+            sink ->
+                pool.preparedQuery(UPDATE_SESSION_DATA_QUERY)
+                    .execute(parameters, new MonoToVertxHandlerAdapter<>(sink)))
+        .block();
   }
 
   @SuppressWarnings("UnusedVariable")
