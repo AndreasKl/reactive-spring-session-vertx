@@ -8,7 +8,7 @@ this projects aims to fill the gap with a fully reactive **postgres** Spring Ses
 Instead of faking reactive behaviour by wrapping JDBC into a thread pool,
 the implementation is based on **[vertx-sql-client](https://github.com/eclipse-vertx/vertx-sql-client)**.
 
-Runs on JDK 8, 11, 12 and JDK 13, if there is a need a JDK 8 version would be possible.
+Supports JDK 8 and up.
 
 ### On MySQL
 The MySQL flavour is compatible with MySQL 5.7+. It is fully working but not battle tested on production like the postgres flavour.

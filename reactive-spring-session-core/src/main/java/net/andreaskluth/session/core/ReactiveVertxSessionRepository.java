@@ -92,7 +92,7 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
    * @param sequenceName overrides the default sequence name
    */
   public void setMetricSequenceName(String sequenceName) {
-    this.metricSequenceName = sequenceName;
+    this.metricSequenceName = requireNonNull(sequenceName, "sequenceName must not be null");
   }
 
   /**
@@ -106,7 +106,6 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
   public void setDefaultMaxInactiveInterval(Duration maxInactiveInterval) {
     this.defaultMaxInactiveInterval =
         requireNonNull(maxInactiveInterval, "maxInactiveInterval must not be null");
-    ;
   }
 
   @Override
@@ -195,11 +194,16 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
   public Mono<ReactiveSession> findById(String id) {
     requireNonNull(id, "id must not be null");
 
-    return preparedQuery(repositoryQueries.selectSql(), Tuple.of(id))
-        .flatMap(rowSet -> Mono.justOrEmpty(mapRowSetToSession(rowSet)))
-        .onErrorResume(DeserializationException.class, e -> Mono.empty())
-        .filter(reactiveSession -> !reactiveSession.isExpired())
-        .as(addMetricsIfEnabled("findById"));
+    Mono<ReactiveSession> findById =
+        preparedQuery(repositoryQueries.selectSql(), Tuple.of(id))
+            .flatMap(rowSet -> Mono.justOrEmpty(mapRowSetToSession(rowSet)))
+            .filter(reactiveSession -> !reactiveSession.isExpired())
+            .as(addMetricsIfEnabled("findById"));
+
+    if (invalidateSessionOnDeserializationError) {
+      return findById.onErrorResume(DeserializationException.class, e -> Mono.empty());
+    }
+    return findById;
   }
 
   private ReactiveSession mapRowSetToSession(RowSet<Row> rowSet) {
