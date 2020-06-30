@@ -6,12 +6,12 @@
   <parent>
     <groupId>net.andreaskluth</groupId>
     <artifactId>reactive-spring-session-parent</artifactId>
-    <version>0.0.11-SNAPSHOT</version>
+    <version>0.0.11</version>
   </parent>
 
   <groupId>net.andreaskluth</groupId>
   <artifactId>reactive-spring-session-postgres</artifactId>
-  <version>0.0.11-SNAPSHOT</version>
+  <version>0.0.11</version>
 
   <name>reactive-spring-session-postgres</name>
   <description>Reactive Spring Session repository for postgres (vertx-pg-client)</description>
