@@ -328,7 +328,7 @@ class ReactivePostgresSessionRepositoryTest {
   private void messWithSessionData(ReactiveSession session)
       throws ExecutionException, InterruptedException {
     pool.preparedQuery("UPDATE session SET session_data = $1 WHERE session_id = $2;")
-        .execute(Tuple.of(Buffer.buffer(new byte[] {1, 2, 3, 4, 5, 6}), session.getId()))
+        .execute(Tuple.of(Buffer.buffer(new byte[] {1, 2}), session.getId()))
         .toCompletionStage()
         .toCompletableFuture()
         .get();
