@@ -70,7 +70,7 @@ mvn clean verify
 
 Deploy the current SNAPSHOT to **oss.sonatype.org**:
 ```bash
-mvn -P release -pl reactive-spring-session-postgres clean deploy
+mvn -P release -pl reactive-spring-session-postgres -am clean deploy
 ```
 
 Deploy a RELEASE to **oss.sonatype.org**:

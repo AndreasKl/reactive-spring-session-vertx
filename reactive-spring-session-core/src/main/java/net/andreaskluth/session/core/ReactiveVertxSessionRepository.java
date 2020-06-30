@@ -47,8 +47,9 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
    * Creates a new instance.
    *
    * @param pool the database pool
-   * @param serializationStrategy the {@link SerializationStrategy} to read and write session data
-   *     with.
+   * @param repositoryQueries the sql queries to use
+   * @param serializationStrategy the {@link SerializationStrategy} to read and write session data *
+   *     with
    * @param clock the {@link Clock} to use
    */
   public ReactiveVertxSessionRepository(
