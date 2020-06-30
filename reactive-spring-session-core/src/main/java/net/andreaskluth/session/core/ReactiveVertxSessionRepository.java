@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import net.andreaskluth.session.core.ReactiveVertxSessionRepository.ReactiveSession;
+import net.andreaskluth.session.core.serializer.DeserializationException;
 import net.andreaskluth.session.core.serializer.SerializationStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,7 @@ import org.springframework.session.Session;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
 
-/** A {@link ReactiveSessionRepository} that is implemented using vert.x reactive client. */
+/** A {@link ReactiveSessionRepository} using vert.x reactive database clients. */
 public class ReactiveVertxSessionRepository implements ReactiveSessionRepository<ReactiveSession> {
 
   private static final Logger LOGGER =
@@ -33,13 +34,14 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
   private static final String METRIC_SEQUENCE_DEFAULT_NAME = "ReactiveVertxSessionRepository";
 
   private final Pool pool;
-  private ReactiveVertxSessionRepositoryQueries repositoryQueries;
+  private final ReactiveVertxSessionRepositoryQueries repositoryQueries;
   private final SerializationStrategy serializationStrategy;
   private final Clock clock;
 
   private boolean enableMetrics = false;
   private String metricSequenceName = METRIC_SEQUENCE_DEFAULT_NAME;
   private Duration defaultMaxInactiveInterval = Duration.ofMinutes(30);
+  private boolean invalidateSessionOnDeserializationError = false;
 
   /**
    * Creates a new instance.
@@ -69,6 +71,19 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
    */
   public void withMetrics(boolean enableMetrics) {
     this.enableMetrics = enableMetrics;
+  }
+
+  /**
+   * Instead of propagating {@link DeserializationException} to the caller, nothing is returned
+   * resulting in the creation of a new session. This is useful if a java class stored in the
+   * session was updated and there is a serial version id mismatch.
+   *
+   * @param invalidateSessionOnDeserializationError whether serialization errors should be
+   *     propagated to the caller.
+   */
+  public void setInvalidateSessionOnDeserializationError(
+      boolean invalidateSessionOnDeserializationError) {
+    this.invalidateSessionOnDeserializationError = invalidateSessionOnDeserializationError;
   }
 
   /**
@@ -153,7 +168,7 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
       sink.complete();
       return;
     }
-    var ex =
+    ReactiveSessionException ex =
         new ReactiveSessionException(
             "SQL insert statement did not return the expected row count of 1, did return "
                 + rowSet.rowCount()
@@ -163,14 +178,12 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
 
   private void handleUpdate(
       ReactiveSession session, RowSet<?> rowSet, SynchronousSink<Object> sink) {
-    // WARNING: Due to the connection flag CLIENT_FOUND_ROWS not being the default for mysql,
-    // when there is no data in tuple to update but the update succeeds MySQL returns zero.
-    if (rowSet.rowCount() >= 0) {
+    if (rowSet.rowCount() >= 1) {
       session.clearChangeFlags();
       sink.complete();
       return;
     }
-    var ex =
+    ReactiveSessionException ex =
         new ReactiveSessionException(
             "SQL update statement did not return the expected row count, did return "
                 + rowSet.rowCount()
@@ -184,6 +197,7 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
 
     return preparedQuery(repositoryQueries.selectSql(), Tuple.of(id))
         .flatMap(rowSet -> Mono.justOrEmpty(mapRowSetToSession(rowSet)))
+        .onErrorResume(DeserializationException.class, e -> Mono.empty())
         .filter(reactiveSession -> !reactiveSession.isExpired())
         .as(addMetricsIfEnabled("findById"));
   }
@@ -241,7 +255,9 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
 
   private Mono<RowSet<Row>> preparedQuery(String statement, Tuple parameters) {
     return Mono.create(
-        sink -> pool.preparedQuery(statement, parameters, new MonoToVertxHandlerAdapter<>(sink)));
+        sink ->
+            pool.preparedQuery(statement)
+                .execute(parameters, new MonoToVertxHandlerAdapter<>(sink)));
   }
 
   private Tuple buildParametersForInsert(ReactiveSession reactiveSession) {

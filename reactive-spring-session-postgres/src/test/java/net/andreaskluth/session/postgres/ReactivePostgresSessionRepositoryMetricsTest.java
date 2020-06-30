@@ -15,6 +15,7 @@ import java.time.Clock;
 import java.time.ZoneId;
 import java.util.Set;
 import net.andreaskluth.session.core.ReactiveVertxSessionRepository;
+import net.andreaskluth.session.core.ReactiveVertxSessionRepository.ReactiveSession;
 import net.andreaskluth.session.core.serializer.JdkSerializationStrategy;
 import net.andreaskluth.session.core.support.ReactiveSessionSchemaPopulator;
 import org.junit.jupiter.api.AfterEach;
@@ -55,8 +56,8 @@ class ReactivePostgresSessionRepositoryMetricsTest {
     SimpleMeterRegistry simple = new SimpleMeterRegistry(SimpleConfig.DEFAULT, new MockClock());
     Metrics.addRegistry(simple);
 
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
     repo.save(session).block();
     repo.findById(session.getId()).block();
     repo.cleanupExpiredSessions().block();
@@ -82,7 +83,7 @@ class ReactivePostgresSessionRepositoryMetricsTest {
   }
 
   private ReactiveVertxSessionRepository sessionRepository() {
-    var sessionRepository =
+    ReactiveVertxSessionRepository sessionRepository =
         new ReactiveVertxSessionRepository(
             pool,
             new ReactivePostgresSessionRepositoryQueries(),

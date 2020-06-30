@@ -41,15 +41,15 @@ public class ReactiveSessionSchemaPopulator {
   }
 
   private static void applyStatement(Pool pool, String statement, MonoSink<Void> sink) {
-    pool.query(
-        statement,
-        event -> {
-          if (event.succeeded()) {
-            sink.success();
-            return;
-          }
-          sink.error(event.cause());
-        });
+    pool.query(statement)
+        .execute(
+            event -> {
+              if (event.succeeded()) {
+                sink.success();
+                return;
+              }
+              sink.error(event.cause());
+            });
   }
 
   public static String[] parseStatementsFromSchema() {

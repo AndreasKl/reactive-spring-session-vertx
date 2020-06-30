@@ -1,11 +1,13 @@
 package net.andreaskluth.session.core.serializer;
 
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -13,16 +15,20 @@ abstract class TestSerializationStrategyBase {
 
   @Test
   void serializesAndDeserializesSimpleData() {
-    var data = strategy().serialize(Map.of("ein", "wert", "noch", "ein wert"));
-    var dataMap = strategy().deserialize(data);
+    Map<String, Object> testData = new HashMap<>();
+    testData.put("ein", "wert");
+    testData.put("noch", "ein wert");
+
+    byte[] data = strategy().serialize(testData);
+    Map<String, Object> dataMap = strategy().deserialize(data);
 
     assertThat(dataMap.get("ein")).isEqualTo("wert");
   }
 
   @Test
   void serializesAndDeserializesComplexObjects() {
-    var data = strategy().serialize(complexData());
-    var dataMap = strategy().deserialize(data);
+    byte[] data = strategy().serialize(complexData());
+    Map<String, Object> dataMap = strategy().deserialize(data);
 
     assertThat((Complex) dataMap.get("complex"))
         .extracting(Complex::getInstant)
@@ -35,7 +41,7 @@ abstract class TestSerializationStrategyBase {
   @Test
   void failsOnNotSerializableObjects() {
     assertThatThrownBy(
-            () -> strategy().serialize(Map.of("fails", new NotSerializable(Instant.now()))))
+            () -> strategy().serialize(singletonMap("fails", new NotSerializable(Instant.now()))))
         .isInstanceOf(SerializationException.class);
   }
 
@@ -46,8 +52,10 @@ abstract class TestSerializationStrategyBase {
   }
 
   private Map<String, Object> complexData() {
-    return Map.of(
-        "complex", new Complex(LocalDateTime.MAX, Instant.MIN), "started", System.nanoTime());
+    HashMap<String, Object> map = new HashMap<>();
+    map.put("complex", new Complex(LocalDateTime.MAX, Instant.MIN));
+    map.put("started", System.nanoTime());
+    return map;
   }
 
   abstract SerializationStrategy strategy();

@@ -45,16 +45,16 @@ class ReactiveMySQLSessionRepositoryTest {
 
   @Test
   void saveAndLoadWithAttributes() {
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
 
     session.setAttribute(KEY, VALUE);
 
-    var sessionId = session.getId();
+    String sessionId = session.getId();
 
     repo.save(session).block();
 
-    var loadedSession = repo.findById(sessionId).block();
+    ReactiveSession loadedSession = repo.findById(sessionId).block();
 
     assertThat(loadedSession.getId()).isEqualTo(sessionId);
     assertThat(loadedSession.<String>getAttribute(KEY)).isEqualTo(VALUE);
@@ -62,11 +62,11 @@ class ReactiveMySQLSessionRepositoryTest {
 
   @Test
   void duplicateSessionIdsAreNotPermitted() {
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
     repo.save(session).block();
 
-    var anotherSession = repo.createSession().block();
+    ReactiveSession anotherSession = repo.createSession().block();
 
     setSessionId(anotherSession, session.getId());
 
@@ -75,19 +75,19 @@ class ReactiveMySQLSessionRepositoryTest {
 
   @Test
   void saveAndLoadRemovingAttributes() {
-    var repo = sessionRepository();
+    ReactiveVertxSessionRepository repo = sessionRepository();
 
-    var session = repo.createSession().block();
+    ReactiveSession session = repo.createSession().block();
     session.setAttribute(KEY, VALUE);
 
     repo.save(session).block();
 
-    var loadedSession = repo.findById(session.getId()).block();
+    ReactiveSession loadedSession = repo.findById(session.getId()).block();
     loadedSession.removeAttribute(KEY);
 
     repo.save(loadedSession).block();
 
-    var reloadedSession = repo.findById(session.getId()).block();
+    ReactiveSession reloadedSession = repo.findById(session.getId()).block();
 
     assertThat(reloadedSession.getId()).isEqualTo(session.getId());
     assertThat(loadedSession.<String>getAttribute(KEY)).isNull();
@@ -95,41 +95,41 @@ class ReactiveMySQLSessionRepositoryTest {
 
   @Test
   void findUnknownSessionIdShouldReturnNull() {
-    var repo = sessionRepository();
+    ReactiveVertxSessionRepository repo = sessionRepository();
     ReactiveSession session = repo.findById("unknown").block();
     assertThat(session).isNull();
   }
 
   @Test
   void deleteSessionById() {
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
     repo.save(session).block();
 
     repo.deleteById(session.getId()).block();
 
-    var loadedSession = repo.findById(session.getId()).block();
+    ReactiveSession loadedSession = repo.findById(session.getId()).block();
     assertThat(loadedSession).isNull();
   }
 
   @Test
   void deleteSessionByIdWithUnknownSessionIdShouldNotCauseAnError() {
-    var repo = sessionRepository();
+    ReactiveVertxSessionRepository repo = sessionRepository();
     repo.deleteById("unknown").block();
   }
 
   @Test
   void rotateSessionIdChangesSessionId() {
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
     session.setAttribute(KEY, VALUE);
 
-    var sessionId = session.getId();
+    String sessionId = session.getId();
     String changedSessionId = session.changeSessionId();
 
     repo.save(session).block();
 
-    var loadedSession = repo.findById(changedSessionId).block();
+    ReactiveSession loadedSession = repo.findById(changedSessionId).block();
 
     assertThat(sessionId).isNotEqualTo(changedSessionId);
     assertThat(loadedSession.getId()).isEqualTo(changedSessionId);
@@ -138,14 +138,14 @@ class ReactiveMySQLSessionRepositoryTest {
 
   @Test
   void updatingValuesInSession() {
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
 
     session.setAttribute(KEY, VALUE);
 
     repo.save(session).block();
 
-    var reloadedSession = repo.findById(session.getId()).block();
+    ReactiveSession reloadedSession = repo.findById(session.getId()).block();
 
     reloadedSession.setAttribute(KEY, "another value");
 
@@ -156,8 +156,8 @@ class ReactiveMySQLSessionRepositoryTest {
 
   @Test
   void updatingWithSameValueShouldChangeSession() {
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
 
     session.setAttribute(KEY, VALUE);
     session.clearChangeFlags();
@@ -168,8 +168,8 @@ class ReactiveMySQLSessionRepositoryTest {
 
   @Test
   void addingNullValueForNewKeyShouldChangeSession() {
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
 
     session.clearChangeFlags();
     session.setAttribute(KEY, null);
@@ -179,22 +179,22 @@ class ReactiveMySQLSessionRepositoryTest {
 
   @Test
   void storeComplexObjectsInSession() {
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
 
     session.setAttribute(KEY, new Complex(Instant.MAX));
 
     repo.save(session).block();
 
-    var reloadedSession = repo.findById(session.getId()).block();
+    ReactiveSession reloadedSession = repo.findById(session.getId()).block();
 
     assertThat(reloadedSession.<Complex>getAttribute(KEY)).isEqualTo(new Complex(Instant.MAX));
   }
 
   @Test
   void objectsThatAreNotSerializableShouldRaise() {
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
 
     session.setAttribute(KEY, new NotSerializable(Instant.MAX));
 
@@ -204,8 +204,8 @@ class ReactiveMySQLSessionRepositoryTest {
 
   @Test
   void savingMultipleTimes() {
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
 
     session.setAttribute("keyA", "value A");
     Mono<Void> saveA = repo.save(session);
@@ -215,48 +215,48 @@ class ReactiveMySQLSessionRepositoryTest {
     Mono<Void> saveB = repo.save(session);
     saveB.block();
 
-    var reloadedSession = repo.findById(session.getId()).block();
+    ReactiveSession reloadedSession = repo.findById(session.getId()).block();
     assertThat(reloadedSession.<String>getAttribute("keyA")).isEqualTo("value A");
     assertThat(reloadedSession.<String>getAttribute("keyB")).isEqualTo("value B");
   }
 
   @Test
   void savingInParallel() {
-    var repo = sessionRepository();
-    var session = repo.createSession().block();
+    ReactiveVertxSessionRepository repo = sessionRepository();
+    ReactiveSession session = repo.createSession().block();
 
     session.setAttribute("keyA", "value A");
-    var saveA = repo.save(session);
+    Mono<Void> saveA = repo.save(session);
 
     session.setAttribute("keyB", "value B");
-    var saveB = repo.save(session);
+    Mono<Void> saveB = repo.save(session);
 
     Flux.concat(saveA, saveB).blockLast();
 
-    var reloadedSession = repo.findById(session.getId()).block();
+    ReactiveSession reloadedSession = repo.findById(session.getId()).block();
     assertThat(reloadedSession.<String>getAttribute("keyA")).isEqualTo("value A");
     assertThat(reloadedSession.<String>getAttribute("keyB")).isEqualTo("value B");
   }
 
   @Test
   void expiredSessionsCanNotBeRetrieved() {
-    var repo = sessionRepository();
+    ReactiveVertxSessionRepository repo = sessionRepository();
     repo.setDefaultMaxInactiveInterval(Duration.ZERO);
 
-    var session = repo.createSession().block();
+    ReactiveSession session = repo.createSession().block();
     repo.save(session).block();
     assertThat(session.isExpired()).isTrue();
 
-    var loadedSession = repo.findById(session.getId()).block();
+    ReactiveSession loadedSession = repo.findById(session.getId()).block();
     assertThat(loadedSession).isNull();
   }
 
   @Test
   void expiredSessionsArePurgedByCleanup() {
-    var repo = sessionRepository();
+    ReactiveVertxSessionRepository repo = sessionRepository();
     repo.setDefaultMaxInactiveInterval(Duration.ZERO);
 
-    var session = repo.createSession().block();
+    ReactiveSession session = repo.createSession().block();
     repo.save(session).block();
 
     Integer count = repo.cleanupExpiredSessions().block();

@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/AndreasKl/reactive-spring-session-postgres.svg?branch=master)](https://travis-ci.org/AndreasKl/reactive-spring-session-postgres) 
+[![Build Status](https://travis-ci.org/AndreasKl/reactive-spring-session-vertx.svg?branch=master)](https://travis-ci.org/AndreasKl/reactive-spring-session-vertx) 
 [![Maven Central](https://img.shields.io/maven-central/v/net.andreaskluth/reactive-spring-session-postgres.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22net.andreaskluth%22%20AND%20a:%22reactive-spring-session-postgres%22)
-# reactive-spring-session-postgres
+# reactive-spring-session-vertx
 
 Due to the lack of a distributed reactive Spring Session implementations for relational databases,
 this projects aims to fill the gap with a fully reactive **postgres** Spring Session store.
@@ -8,10 +8,10 @@ this projects aims to fill the gap with a fully reactive **postgres** Spring Ses
 Instead of faking reactive behaviour by wrapping JDBC into a thread pool,
 the implementation is based on **[vertx-sql-client](https://github.com/eclipse-vertx/vertx-sql-client)**.
 
-Runs on JDK 11, 12 and JDK 13, if there is a need a JDK 8 version would be possible.
+Runs on JDK 8, 11, 12 and JDK 13, if there is a need a JDK 8 version would be possible.
 
 ### On MySQL
-The MySQL flavour is currently work in progress, compatible with MySQL 5.7+. It is fully working but not battle tested on production like the postgres flavour.
+The MySQL flavour is compatible with MySQL 5.7+. It is fully working but not battle tested on production like the postgres flavour.
 
 ## How to use
 A demo project is located under `/webflux-demo-application` written in Kotlin.
@@ -59,7 +59,7 @@ class PostgresSessionConfiguration {
 ```
 
 ## Is this production ready?
-**reactive-spring-session-postgres** is used in production **[@REWE digital](https://www.rewe-digital.com/)** for our reactive frontend gateway.
+**reactive-spring-session-vertx* is used in production **[@REWE digital](https://www.rewe-digital.com/)** for our reactive frontend gateway.
 
 ## Build
 
