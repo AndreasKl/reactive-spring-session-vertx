@@ -11,7 +11,8 @@
        See the License for the specific language governing permissions and
        limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>net.andreaskluth</groupId>
@@ -20,7 +21,7 @@
   <packaging>pom</packaging>
 
   <name>reactive-spring-session-parent</name>
-  <url>https://github.com/AndreasKl/reactive-spring-session-postgres</url>
+  <url>https://github.com/AndreasKl/reactive-spring-session-vertx</url>
   <description>Parent for reactive Spring Session repository for postgres and mysql</description>
   <inceptionYear>2019</inceptionYear>
 
@@ -42,9 +43,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git@github.com:AndreasKl/reactive-spring-session-postgres.git</connection>
-    <developerConnection>scm:git:git@github.com:AndreasKl/reactive-spring-session-postgres.git</developerConnection>
-    <url>http://github.com/AndreasKl/reactive-spring-session-postgres/tree/master</url>
+    <connection>scm:git:git@github.com:AndreasKl/reactive-spring-session-vertx.git</connection>
+    <developerConnection>scm:git:git@github.com:AndreasKl/reactive-spring-session-vertx.git</developerConnection>
+    <url>http://github.com/AndreasKl/reactive-spring-session-vertx/tree/master</url>
     <tag>HEAD</tag>
   </scm>
 
@@ -64,10 +65,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
 
-    <vertx-sql-client.version>4.0.0-milestone4</vertx-sql-client.version>
+    <vertx-sql-client.version>4.0.0-milestone5</vertx-sql-client.version>
     <jackson.version>2.11.1</jackson.version>
     <spring.version>5.2.7.RELEASE</spring.version>
     <spring-session-core.version>2.3.0.RELEASE</spring-session-core.version>
@@ -78,6 +79,7 @@
     <assertj-core.version>3.16.1</assertj-core.version>
     <slf4j.version>1.7.30</slf4j.version>
     <micrometer-core.version>1.5.2</micrometer-core.version>
+    <reactor-test.version>3.3.7.RELEASE</reactor-test.version>
 
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
@@ -87,7 +89,6 @@
     <nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
     <fmt-maven-plugin.version>2.10</fmt-maven-plugin.version>
-    <reactor-test.version>3.3.7.RELEASE</reactor-test.version>
   </properties>
 
   <dependencyManagement>

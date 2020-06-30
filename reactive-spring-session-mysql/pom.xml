@@ -15,7 +15,7 @@
 
   <name>reactive-spring-session-mysql</name>
   <description>Reactive Spring Session repository for mysql (vertx-pg-client)</description>
-  <url>https://github.com/AndreasKl/reactive-spring-session-postgres</url>
+  <url>https://github.com/AndreasKl/reactive-spring-session-vertx</url>
 
   <properties>
   </properties>

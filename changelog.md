@@ -1,4 +1,12 @@
-# reactive-spring-session-postgres changelog
+# reactive-spring-session-vertx changelog
+
+# 0.0.11
+* Configure whether a deserialization exception invalidates the session or
+  propagates the exception up to the caller.
+  * See: net.andreaskluth.session.core.ReactiveVertxSessionRepository.setInvalidateSessionOnDeserializationError
+* Support for Java8  
+* Various dependency updates:
+  * vertx-sql-client : 4.0.0-milestone5
 
 # 0.0.10
 

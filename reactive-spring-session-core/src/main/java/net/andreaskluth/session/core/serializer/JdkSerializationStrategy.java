@@ -18,7 +18,7 @@ public class JdkSerializationStrategy implements SerializationStrategy {
     try (ByteArrayInputStream bais = new ByteArrayInputStream(input);
         ObjectInputStream ois = new ObjectInputStream(bais)) {
       @SuppressWarnings("unchecked")
-      var dataMap = (Map<String, Object>) ois.readObject();
+      Map<String, Object> dataMap = (Map<String, Object>) ois.readObject();
       return dataMap;
     } catch (IOException | ClassNotFoundException e) {
       throw new DeserializationException(e);

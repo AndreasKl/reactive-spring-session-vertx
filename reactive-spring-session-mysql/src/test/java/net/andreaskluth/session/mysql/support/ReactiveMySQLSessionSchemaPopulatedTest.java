@@ -26,8 +26,9 @@ class ReactiveMySQLSessionSchemaPopulatedTest {
   void schemaIsCreated() {
     Mono.<RowSet<Row>>create(
             sink -> {
-              var adapter = new MonoToVertxHandlerAdapter<>(sink);
-              pool().query("DROP TABLE IF EXISTS session", adapter::handle);
+              MonoToVertxHandlerAdapter<RowSet<Row>> adapter =
+                  new MonoToVertxHandlerAdapter<>(sink);
+              pool().query("DROP TABLE IF EXISTS session").execute(adapter);
             })
         .block();
 
@@ -35,8 +36,9 @@ class ReactiveMySQLSessionSchemaPopulatedTest {
 
     Mono.<RowSet<Row>>create(
             sink -> {
-              var adapter = new MonoToVertxHandlerAdapter<>(sink);
-              pool().query("SELECT * FROM session", adapter::handle);
+              MonoToVertxHandlerAdapter<RowSet<Row>> adapter =
+                  new MonoToVertxHandlerAdapter<>(sink);
+              pool().query("SELECT * FROM session").execute(adapter);
             })
         .block();
   }

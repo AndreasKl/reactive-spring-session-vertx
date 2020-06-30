@@ -15,7 +15,7 @@
 
   <name>reactive-spring-session-postgres</name>
   <description>Reactive Spring Session repository for postgres (vertx-pg-client)</description>
-  <url>https://github.com/AndreasKl/reactive-spring-session-postgres</url>
+  <url>https://github.com/AndreasKl/reactive-spring-session-vertx</url>
 
   <properties>
   </properties>

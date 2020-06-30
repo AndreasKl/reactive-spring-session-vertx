@@ -31,8 +31,9 @@ class ReactivePostgresSessionSchemaPopulatedTest {
 
     Mono.<RowSet<Row>>create(
             sink -> {
-              var adapter = new MonoToVertxHandlerAdapter<>(sink);
-              pool().query("SELECT * FROM session", adapter::handle);
+              MonoToVertxHandlerAdapter<RowSet<Row>> adapter =
+                  new MonoToVertxHandlerAdapter<>(sink);
+              pool().query("SELECT * FROM session").execute(adapter);
             })
         .block();
   }
@@ -45,8 +46,9 @@ class ReactivePostgresSessionSchemaPopulatedTest {
 
     Mono.<RowSet<Row>>create(
             sink -> {
-              var adapter = new MonoToVertxHandlerAdapter<>(sink);
-              pool().query("SELECT * FROM session", adapter::handle);
+              MonoToVertxHandlerAdapter<RowSet<Row>> adapter =
+                  new MonoToVertxHandlerAdapter<>(sink);
+              pool().query("SELECT * FROM session").execute(adapter);
             })
         .block();
   }
