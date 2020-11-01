@@ -69,8 +69,8 @@
 
     <vertx-sql-client.version>4.0.0.Beta1</vertx-sql-client.version>
     <jackson.version>2.11.3</jackson.version>
-    <spring.version>5.2.9.RELEASE</spring.version>
-    <spring-session-core.version>2.3.1.RELEASE</spring-session-core.version>
+    <spring.version>5.3.0</spring.version>
+    <spring-session-core.version>2.4.0</spring-session-core.version>
 
     <otj-pg-embedded.version>0.13.3</otj-pg-embedded.version>
     <wix-embedded-mysql.version>4.6.1</wix-embedded-mysql.version>
@@ -78,7 +78,7 @@
     <assertj-core.version>3.18.0</assertj-core.version>
     <slf4j.version>1.7.30</slf4j.version>
     <micrometer-core.version>1.6.0</micrometer-core.version>
-    <reactor-test.version>3.3.10.RELEASE</reactor-test.version>
+    <reactor-test.version>3.4.0</reactor-test.version>
 
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
