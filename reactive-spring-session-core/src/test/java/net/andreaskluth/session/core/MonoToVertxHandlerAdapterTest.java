@@ -1,7 +1,6 @@
 package net.andreaskluth.session.core;
 
 import io.vertx.core.Future;
-import io.vertx.core.impl.FutureFactoryImpl;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -10,7 +9,7 @@ class MonoToVertxHandlerAdapterTest {
 
   @Test
   void success() {
-    Future<Boolean> booleanFuture = new FutureFactoryImpl().succeededFuture(true);
+    Future<Boolean> booleanFuture = Future.succeededFuture(true);
 
     Mono.<Boolean>create(
             monoSink -> {
@@ -25,8 +24,7 @@ class MonoToVertxHandlerAdapterTest {
 
   @Test
   void failure() {
-    Future<Boolean> booleanFuture =
-        new FutureFactoryImpl().<Boolean>failedFuture(new IllegalStateException());
+    Future<Boolean> booleanFuture = Future.failedFuture(new IllegalStateException());
 
     Mono.<Boolean>create(
             monoSink -> {
