@@ -16,7 +16,7 @@
 
   <groupId>net.andreaskluth</groupId>
   <artifactId>reactive-spring-session-parent</artifactId>
-  <version>0.0.12</version>
+  <version>0.0.13-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>reactive-spring-session-parent</name>
@@ -45,7 +45,7 @@
     <connection>scm:git:git@github.com:AndreasKl/reactive-spring-session-vertx.git</connection>
     <developerConnection>scm:git:git@github.com:AndreasKl/reactive-spring-session-vertx.git</developerConnection>
     <url>http://github.com/AndreasKl/reactive-spring-session-vertx/tree/master</url>
-    <tag>reactive-spring-session-parent-0.0.12</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <modules>

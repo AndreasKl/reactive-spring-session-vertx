@@ -6,11 +6,11 @@
   <parent>
     <groupId>net.andreaskluth</groupId>
     <artifactId>reactive-spring-session-parent</artifactId>
-    <version>0.0.12</version>
+    <version>0.0.13-SNAPSHOT</version>
   </parent>
 
   <artifactId>reactive-spring-session-core</artifactId>
-  <version>0.0.12</version>
+  <version>0.0.13-SNAPSHOT</version>
 
   <name>reactive-spring-session-core</name>
   <description>Reactive Spring Session repository for mysql (vertx-mysql-client)</description>
