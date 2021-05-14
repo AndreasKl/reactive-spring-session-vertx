@@ -69,7 +69,7 @@
 
     <vertx-sql-client.version>4.0.3</vertx-sql-client.version>
     <jackson.version>2.12.3</jackson.version>
-    <spring.version>5.3.6</spring.version>
+    <spring.version>5.3.7</spring.version>
     <spring-session-core.version>2.4.3</spring-session-core.version>
 
     <otj-pg-embedded.version>0.13.3</otj-pg-embedded.version>
