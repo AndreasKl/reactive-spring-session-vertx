@@ -72,7 +72,7 @@
     <spring.version>5.3.7</spring.version>
     <spring-session-core.version>2.5.0</spring-session-core.version>
 
-    <otj-pg-embedded.version>0.13.3</otj-pg-embedded.version>
+    <otj-pg-embedded.version>0.13.4</otj-pg-embedded.version>
     <wix-embedded-mysql.version>4.6.1</wix-embedded-mysql.version>
     <junit-jupiter-api.version>5.7.2</junit-jupiter-api.version>
     <assertj-core.version>3.19.0</assertj-core.version>
