@@ -78,7 +78,7 @@
     <assertj-core.version>3.20.1</assertj-core.version>
     <slf4j.version>1.7.30</slf4j.version>
     <micrometer-core.version>1.7.0</micrometer-core.version>
-    <reactor-test.version>3.4.6</reactor-test.version>
+    <reactor-test.version>3.4.7</reactor-test.version>
 
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
