@@ -1,5 +1,6 @@
 [![Build Status](https://app.travis-ci.com/AndreasKl/reactive-spring-session-vertx.svg?branch=master)](https://app.travis-ci.com/AndreasKl/reactive-spring-session-vertx)
 [![Maven Central](https://img.shields.io/maven-central/v/net.andreaskluth/reactive-spring-session-postgres.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22net.andreaskluth%22%20AND%20a:%22reactive-spring-session-postgres%22)
+[![javadoc](https://javadoc.io/badge2/net.andreaskluth/reactive-spring-session-core/javadoc.svg)](https://javadoc.io/doc/net.andreaskluth/reactive-spring-session-core) 
 # reactive-spring-session-vertx
 
 Due to the lack of a distributed reactive Spring Session implementations for relational databases,
