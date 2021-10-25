@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/AndreasKl/reactive-spring-session-vertx.svg?branch=master)](https://travis-ci.org/AndreasKl/reactive-spring-session-vertx) 
+[![Build Status](https://app.travis-ci.com/AndreasKl/reactive-spring-session-vertx.svg?branch=master)](https://app.travis-ci.com/AndreasKl/reactive-spring-session-vertx)
 [![Maven Central](https://img.shields.io/maven-central/v/net.andreaskluth/reactive-spring-session-postgres.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22net.andreaskluth%22%20AND%20a:%22reactive-spring-session-postgres%22)
 # reactive-spring-session-vertx
 
