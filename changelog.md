@@ -1,5 +1,12 @@
 # reactive-spring-session-vertx changelog
 
+# 0.0.13
+* Dependency updates:
+  * VertX SQL 4.1.5
+  * Spring Core 5.3.12
+  * Spring Session 2.5.3
+* Configured Enforcer Plugin
+
 # 0.0.11
 * Configure whether a deserialization exception invalidates the session or
   propagates the exception up to the caller.

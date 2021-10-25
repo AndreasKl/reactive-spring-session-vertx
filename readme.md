@@ -3,17 +3,16 @@
 # reactive-spring-session-vertx
 
 Due to the lack of a distributed reactive Spring Session implementations for relational databases,
-this projects aims to fill the gap with a fully reactive **postgres** Spring Session store.
+this projects aims to fill the gap with a fully reactive **PostgreSQL** any **MySQL** Spring Session store.
 
-Instead of faking reactive behaviour by wrapping JDBC into a thread pool,
-the implementation is based on **[vertx-sql-client](https://github.com/eclipse-vertx/vertx-sql-client)**.
+The implementation is based on **[vertx-sql-client](https://github.com/eclipse-vertx/vertx-sql-client)**.
 
-Supports JDK 8 and up.
+Supports JDK 8 and up. Does not depend on **Spring Boot** but can be easily used with **Spring Boot**.
 
-### On MySQL
-The MySQL flavour is compatible with MySQL 5.7+. It is fully working but not battle tested on production like the postgres flavour.
+### A few words on MySQL
+The MySQL flavour is compatible with MySQL 5.7 and up. It is fully working but not battle tested on production like the PostgreSQL version.
 
-## How to use
+## Setup instructions
 A demo project is located under `/webflux-demo-application` written in Kotlin.
 `ReactivePostgresSessionConfiguration` registers a `ReactivePostgresSessionRepository` 
 and a scheduled task that removes expired sessions from the database. Expired sessions
@@ -59,11 +58,11 @@ class PostgresSessionConfiguration {
 ```
 
 ## Is this production ready?
-**reactive-spring-session-vertx* is used in production **[@REWE digital](https://www.rewe-digital.com/)** for our reactive frontend gateway.
+**reactive-spring-session-vertx** is used in production **[@REWE digital](https://www.rewe-digital.com/)** for their Spring Gateway based reactive API gateway.
 
 ## Build
 
-Just test and build:
+Just test and build, will start Postgres and MySQL as embedded databases:
 ```bash
 mvn clean verify
 ```

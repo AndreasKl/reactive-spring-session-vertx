@@ -23,7 +23,7 @@ import reactor.core.scheduler.Schedulers;
 @EnableScheduling
 public class ReactivePostgresSessionConfiguration implements SchedulingConfigurer {
 
-  public static final String DEFAULT_CLEANUP_CRON = "0 * * * * *";
+  public static final String DEFAULT_EVERY_MINUTE_CLEANUP_CRON = "0 * * * * *";
 
   private final Clock clock;
   private final PoolOptions poolOptions;
@@ -68,6 +68,6 @@ public class ReactivePostgresSessionConfiguration implements SchedulingConfigure
                 .cleanupExpiredSessions()
                 .subscribeOn(Schedulers.immediate())
                 .subscribe(),
-        DEFAULT_CLEANUP_CRON);
+        DEFAULT_EVERY_MINUTE_CLEANUP_CRON);
   }
 }

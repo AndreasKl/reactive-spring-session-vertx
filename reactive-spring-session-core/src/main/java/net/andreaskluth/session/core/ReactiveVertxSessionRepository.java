@@ -77,7 +77,7 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
   /**
    * Instead of propagating {@link DeserializationException} to the caller, nothing is returned
    * resulting in the creation of a new session. This is useful if a java class stored in the
-   * session was updated and there is a serial version id mismatch.
+   * session was updated a serial version id mismatch occurs.
    *
    * @param invalidateSessionOnDeserializationError whether serialization errors should be
    *     propagated to the caller.
@@ -97,9 +97,8 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
   }
 
   /**
-   * Sets the maximum inactive interval in seconds between requests before newly created sessions
-   * will be invalidated. A negative time indicates that the session will never timeout. The default
-   * is 1800 (30 minutes).
+   * Sets the maximum inactive interval before unused sessions are invalidated. A negative time
+   * indicates that the session will never timeout. The default is 1800 (30 minutes).
    *
    * @param maxInactiveInterval the {@link Duration} that the {@link Session} should be kept alive
    *     between client requests.

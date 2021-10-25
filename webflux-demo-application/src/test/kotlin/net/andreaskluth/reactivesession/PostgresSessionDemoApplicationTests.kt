@@ -3,6 +3,7 @@ package net.andreaskluth.reactivesession
 import com.opentable.db.postgres.junit5.EmbeddedPostgresExtension
 import com.opentable.db.postgres.junit5.PreparedDbExtension
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -19,12 +20,6 @@ import org.springframework.web.reactive.function.BodyInserters
 @SpringBootTest
 @AutoConfigureWebTestClient
 class PostgresSessionDemoApplicationTests {
-
-    @Autowired
-    lateinit var webTestClient: WebTestClient
-
-    @Autowired
-    lateinit var userDetailsService: MapReactiveUserDetailsService
 
     companion object {
 
@@ -46,6 +41,13 @@ class PostgresSessionDemoApplicationTests {
         }
     }
 
+
+    @Autowired
+    lateinit var webTestClient: WebTestClient
+
+    @Autowired
+    lateinit var userDetailsService: MapReactiveUserDetailsService
+
     @Test
     fun appIsSecured() {
         webTestClient.get().uri("/").exchange().expectStatus().isUnauthorized
@@ -53,7 +55,8 @@ class PostgresSessionDemoApplicationTests {
 
     @Test
     fun loginWorks() {
-        val user = userDetailsService.findByUsername("user").block()
+        val user: UserDetails =
+            userDetailsService.findByUsername("user").block() ?: fail("User not found")
 
         webTestClient
             .mutateWith(csrf())
@@ -69,8 +72,8 @@ class PostgresSessionDemoApplicationTests {
         assertThat(t).contains("SESSION")
     }
 
-    private fun loginFormBody(user: UserDetails?) =
-        BodyInserters.fromFormData("username", user!!.username)
+    private fun loginFormBody(user: UserDetails) =
+        BodyInserters.fromFormData("username", user.username)
             .with("password", sanitizePassword(user))
 
     private fun sanitizePassword(user: UserDetails) = user.password.removePrefix("{noop}")

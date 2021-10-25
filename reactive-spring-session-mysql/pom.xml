@@ -9,7 +9,6 @@
     <version>0.0.13-SNAPSHOT</version>
   </parent>
 
-  <groupId>net.andreaskluth</groupId>
   <artifactId>reactive-spring-session-mysql</artifactId>
   <version>0.0.13-SNAPSHOT</version>
 
@@ -41,16 +40,6 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-mysql-client</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
-          <artifactId>jackson-core</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
