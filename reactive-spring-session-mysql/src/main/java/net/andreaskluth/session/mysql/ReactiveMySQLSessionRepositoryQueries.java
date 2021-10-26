@@ -6,7 +6,7 @@ public class ReactiveMySQLSessionRepositoryQueries
     implements ReactiveVertxSessionRepositoryQueries {
 
   private static final String INSERT_SQL =
-      "INSERT INTO session "
+      "INSERT IGNORE INTO session "
           + " ("
           + "   id,"
           + "   session_id,"

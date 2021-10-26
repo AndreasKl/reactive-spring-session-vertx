@@ -25,7 +25,10 @@ public class ReactivePostgresSessionRepositoryQueries
           + "   $5,"
           + "   $6,"
           + "   $7"
-          + " );";
+          + " ) ON CONFLICT (id) DO "
+          + " UPDATE SET "
+          + "   session_id = $2,"
+          + "   session_data = $3;";
 
   private static final String UPDATE_SQL =
       "UPDATE session "

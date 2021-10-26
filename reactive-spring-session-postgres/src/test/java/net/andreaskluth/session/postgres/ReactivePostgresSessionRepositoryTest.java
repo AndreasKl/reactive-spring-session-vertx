@@ -19,7 +19,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import net.andreaskluth.session.core.MonoToVertxHandlerAdapter;
 import net.andreaskluth.session.core.ReactiveVertxSessionRepository;
 import net.andreaskluth.session.core.ReactiveVertxSessionRepository.ReactiveSession;
@@ -223,8 +222,7 @@ class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  void objectsThatAreNotDeserializableShouldRaise()
-      throws ExecutionException, InterruptedException {
+  void objectsThatAreNotDeserializableShouldRaise() {
     ReactiveVertxSessionRepository repo = sessionRepository();
 
     ReactiveSession session = repo.createSession().block();
@@ -237,8 +235,7 @@ class ReactivePostgresSessionRepositoryTest {
   }
 
   @Test
-  void objectsThatAreNotDeserializableShouldNotRaiseIfConfigured()
-      throws ExecutionException, InterruptedException {
+  void objectsThatAreNotDeserializableShouldNotRaiseIfConfigured() {
     ReactiveVertxSessionRepository repo = sessionRepository();
     repo.setInvalidateSessionOnDeserializationError(true);
 
@@ -280,7 +277,7 @@ class ReactivePostgresSessionRepositoryTest {
     session.setAttribute("keyB", "value B");
     Mono<Void> saveB = repo.save(session);
 
-    Flux.concat(saveA, saveB).blockLast();
+    Flux.merge(saveA, saveB).blockLast();
 
     ReactiveSession reloadedSession = repo.findById(session.getId()).block();
     assertThat(reloadedSession.<String>getAttribute("keyA")).isEqualTo("value A");

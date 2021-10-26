@@ -232,7 +232,7 @@ class ReactiveMySQLSessionRepositoryTest {
     session.setAttribute("keyB", "value B");
     Mono<Void> saveB = repo.save(session);
 
-    Flux.concat(saveA, saveB).blockLast();
+    Flux.merge(saveA, saveB).blockLast();
 
     ReactiveSession reloadedSession = repo.findById(session.getId()).block();
     assertThat(reloadedSession.<String>getAttribute("keyA")).isEqualTo("value A");

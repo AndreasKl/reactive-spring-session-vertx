@@ -163,17 +163,8 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
 
   private void handleInsert(
       ReactiveSession session, RowSet<?> rowSet, SynchronousSink<Object> sink) {
-    if (rowSet.rowCount() == 1) {
-      session.clearChangeFlags();
-      sink.complete();
-      return;
-    }
-    ReactiveSessionException ex =
-        new ReactiveSessionException(
-            "SQL insert statement did not return the expected row count of 1, did return "
-                + rowSet.rowCount()
-                + " inserted/updated records.");
-    sink.error(ex);
+    session.clearChangeFlags();
+    sink.complete();
   }
 
   private void handleUpdate(
