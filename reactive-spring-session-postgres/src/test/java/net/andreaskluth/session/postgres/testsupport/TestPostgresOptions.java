@@ -1,4 +1,4 @@
-package net.andreaskluth.session.postgres;
+package net.andreaskluth.session.postgres.testsupport;
 
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;

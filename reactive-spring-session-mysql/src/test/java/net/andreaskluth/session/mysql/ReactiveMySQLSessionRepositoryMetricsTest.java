@@ -15,6 +15,7 @@ import net.andreaskluth.session.core.ReactiveVertxSessionRepository;
 import net.andreaskluth.session.core.ReactiveVertxSessionRepository.ReactiveSession;
 import net.andreaskluth.session.core.serializer.JdkSerializationStrategy;
 import net.andreaskluth.session.mysql.testsupport.MySQLDbExtension;
+import net.andreaskluth.session.mysql.testsupport.TestMySQLOptions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

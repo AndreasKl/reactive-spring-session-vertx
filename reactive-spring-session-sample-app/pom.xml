@@ -8,9 +8,9 @@
     <relativePath />
   </parent>
   <groupId>net.andreaskluth</groupId>
-  <artifactId>postgres-session-demo</artifactId>
+  <artifactId>reactive-spring-session-sample-app</artifactId>
   <version>0.0.14-SNAPSHOT</version>
-  <name>postgres-session-demo</name>
+  <name>reactive-spring-session-sample-app</name>
   <description>Postgres reactive session demo</description>
 
   <licenses>

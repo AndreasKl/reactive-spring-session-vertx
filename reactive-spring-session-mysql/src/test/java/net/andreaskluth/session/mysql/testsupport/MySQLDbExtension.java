@@ -7,7 +7,7 @@ import static com.wix.mysql.distribution.Version.v5_7_latest;
 import com.wix.mysql.EmbeddedMysql;
 import com.wix.mysql.config.MysqldConfig;
 import com.wix.mysql.config.SchemaConfig;
-import net.andreaskluth.session.core.support.ReactiveSessionSchemaPopulator;
+import net.andreaskluth.session.core.support.ReactiveSessionSchemaInitializer;
 import org.junit.jupiter.api.extension.Extension;
 
 public class MySQLDbExtension implements Extension {
@@ -16,7 +16,7 @@ public class MySQLDbExtension implements Extension {
       anEmbeddedMysql(config())
           .addSchema(
               SchemaConfig.aSchemaConfig("session")
-                  .withCommands(ReactiveSessionSchemaPopulator.parseStatementsFromSchema())
+                  .withCommands(ReactiveSessionSchemaInitializer.parseStatementsFromSchema())
                   .build())
           .start();
 

@@ -9,13 +9,13 @@ import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import net.andreaskluth.session.core.MonoToVertxHandlerAdapter;
-import net.andreaskluth.session.core.support.ReactiveSessionSchemaPopulator;
-import net.andreaskluth.session.postgres.TestPostgresOptions;
+import net.andreaskluth.session.core.support.ReactiveSessionSchemaInitializer;
+import net.andreaskluth.session.postgres.testsupport.TestPostgresOptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Mono;
 
-class ReactivePostgresSessionSchemaPopulatedTest {
+class ReactivePostgresSessionSchemaInitializerTest {
 
   @RegisterExtension
   static final PreparedDbExtension embeddedPostgres =
@@ -27,7 +27,7 @@ class ReactivePostgresSessionSchemaPopulatedTest {
 
   @Test
   void schemaIsCreated() {
-    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
+    ReactiveSessionSchemaInitializer.applyDefaultSchema(pool()).block();
 
     Mono.<RowSet<Row>>create(
             sink -> {
@@ -40,9 +40,9 @@ class ReactivePostgresSessionSchemaPopulatedTest {
 
   @Test
   void schemaCanBeAppliedMultipleTimes() {
-    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
-    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
-    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
+    ReactiveSessionSchemaInitializer.applyDefaultSchema(pool()).block();
+    ReactiveSessionSchemaInitializer.applyDefaultSchema(pool()).block();
+    ReactiveSessionSchemaInitializer.applyDefaultSchema(pool()).block();
 
     Mono.<RowSet<Row>>create(
             sink -> {
@@ -56,7 +56,7 @@ class ReactivePostgresSessionSchemaPopulatedTest {
   @Test
   void failsIfStatementsCanNotBeExecuted() {
     assertThatThrownBy(
-            () -> ReactiveSessionSchemaPopulator.applySchema(pool(), DEFECTIVE_SCHEMA).block())
+            () -> ReactiveSessionSchemaInitializer.applySchema(pool(), DEFECTIVE_SCHEMA).block())
         .isInstanceOf(PgException.class);
   }
 

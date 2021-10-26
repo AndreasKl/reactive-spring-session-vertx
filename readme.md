@@ -14,7 +14,7 @@ Supports JDK 8 and up. Does not depend on **Spring Boot** but can be easily used
 The MySQL flavour is compatible with MySQL 5.7 and up. It is fully working but not battle tested on production like the PostgreSQL version.
 
 ## Setup instructions
-A demo project is located under `/webflux-demo-application` written in Kotlin.
+A demo project is located under `/reactive-spring-session-sample-app` written in Kotlin.
 `ReactivePostgresSessionConfiguration` registers a `ReactivePostgresSessionRepository` 
 and a scheduled task that removes expired sessions from the database. Expired sessions
 are never returned to the user, however could remain in the database until the scheduler

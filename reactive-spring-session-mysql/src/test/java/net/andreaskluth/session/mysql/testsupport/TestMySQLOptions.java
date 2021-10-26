@@ -1,4 +1,4 @@
-package net.andreaskluth.session.mysql;
+package net.andreaskluth.session.mysql.testsupport;
 
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;

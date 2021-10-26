@@ -5,7 +5,7 @@ import com.opentable.db.postgres.embedded.PreparedDbProvider
 import io.vertx.pgclient.PgConnectOptions
 import io.vertx.sqlclient.Pool
 import io.vertx.sqlclient.PoolOptions
-import net.andreaskluth.session.core.support.ReactiveSessionSchemaPopulator
+import net.andreaskluth.session.core.support.ReactiveSessionSchemaInitializer
 import net.andreaskluth.session.postgres.ReactivePostgresSessionConfiguration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -73,7 +73,7 @@ class PrepareSchemaConfiguration(val pool: Pool) {
 
     @PostConstruct
     fun prepareSchema() {
-        ReactiveSessionSchemaPopulator.applyDefaultSchema(pool).block()
+        ReactiveSessionSchemaInitializer.applyDefaultSchema(pool).block()
     }
 }
 

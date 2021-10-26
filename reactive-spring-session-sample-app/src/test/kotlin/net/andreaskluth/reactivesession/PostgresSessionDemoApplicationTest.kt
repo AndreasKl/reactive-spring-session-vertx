@@ -19,7 +19,7 @@ import org.springframework.web.reactive.function.BodyInserters
 
 @SpringBootTest
 @AutoConfigureWebTestClient
-class PostgresSessionDemoApplicationTests {
+class PostgresSessionDemoApplicationTest {
 
     companion object {
 

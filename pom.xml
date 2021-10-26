@@ -52,7 +52,7 @@
     <module>reactive-spring-session-core</module>
     <module>reactive-spring-session-postgres</module>
     <module>reactive-spring-session-mysql</module>
-    <module>webflux-demo-application</module>
+    <module>reactive-spring-session-sample-app</module>
   </modules>
 
   <distributionManagement>

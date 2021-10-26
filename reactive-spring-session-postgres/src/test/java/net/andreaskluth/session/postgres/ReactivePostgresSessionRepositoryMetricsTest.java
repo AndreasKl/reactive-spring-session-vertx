@@ -17,7 +17,8 @@ import java.util.Set;
 import net.andreaskluth.session.core.ReactiveVertxSessionRepository;
 import net.andreaskluth.session.core.ReactiveVertxSessionRepository.ReactiveSession;
 import net.andreaskluth.session.core.serializer.JdkSerializationStrategy;
-import net.andreaskluth.session.core.support.ReactiveSessionSchemaPopulator;
+import net.andreaskluth.session.core.support.ReactiveSessionSchemaInitializer;
+import net.andreaskluth.session.postgres.testsupport.TestPostgresOptions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,7 @@ class ReactivePostgresSessionRepositoryMetricsTest {
       EmbeddedPostgresExtension.preparedDatabase(
           ds -> {
             try (Connection connection = ds.getConnection()) {
-              ReactiveSessionSchemaPopulator.applyDefaultSchema(connection);
+              ReactiveSessionSchemaInitializer.applyDefaultSchema(connection);
             }
           });
 

@@ -7,14 +7,14 @@ import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import net.andreaskluth.session.core.MonoToVertxHandlerAdapter;
-import net.andreaskluth.session.core.support.ReactiveSessionSchemaPopulator;
-import net.andreaskluth.session.mysql.TestMySQLOptions;
+import net.andreaskluth.session.core.support.ReactiveSessionSchemaInitializer;
 import net.andreaskluth.session.mysql.testsupport.MySQLDbExtension;
+import net.andreaskluth.session.mysql.testsupport.TestMySQLOptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Mono;
 
-class ReactiveMySQLSessionSchemaPopulatedTest {
+class ReactiveMySQLSessionSchemaInitializerTest {
 
   @RegisterExtension static final MySQLDbExtension embeddedMySQL = new MySQLDbExtension();
 
@@ -32,7 +32,7 @@ class ReactiveMySQLSessionSchemaPopulatedTest {
             })
         .block();
 
-    ReactiveSessionSchemaPopulator.applyDefaultSchema(pool()).block();
+    ReactiveSessionSchemaInitializer.applyDefaultSchema(pool()).block();
 
     Mono.<RowSet<Row>>create(
             sink -> {
@@ -46,7 +46,7 @@ class ReactiveMySQLSessionSchemaPopulatedTest {
   @Test
   void failsIfStatementsCanNotBeExecuted() {
     assertThatThrownBy(
-            () -> ReactiveSessionSchemaPopulator.applySchema(pool(), DEFECTIVE_SCHEMA).block())
+            () -> ReactiveSessionSchemaInitializer.applySchema(pool(), DEFECTIVE_SCHEMA).block())
         .isInstanceOf(MySQLException.class);
   }
 

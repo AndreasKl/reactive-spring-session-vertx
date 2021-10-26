@@ -25,7 +25,7 @@ import org.springframework.session.Session;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
 
-/** A {@link ReactiveSessionRepository} using vert.x reactive database clients. */
+/** A {@link ReactiveSessionRepository} using vert.x reactive database client. */
 public class ReactiveVertxSessionRepository implements ReactiveSessionRepository<ReactiveSession> {
 
   private static final Logger LOGGER =
@@ -157,7 +157,8 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
           repositoryQueries.updateSql(), buildParametersForUpdate(reactiveSession));
     }
     return preparedQuery(
-        repositoryQueries.reducedUpdateSql(), buildReducedParametersForUpdate(reactiveSession));
+        repositoryQueries.reducedUpdateSql(),
+        buildParametersWithoutSessionDataForUpdate(reactiveSession));
   }
 
   private void handleInsert(
@@ -243,10 +244,12 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
 
   public Mono<Integer> cleanupExpiredSessions() {
     return Mono.defer(
-            () ->
-                preparedQuery(
-                        repositoryQueries.deleteExpiredSessionsSql(), Tuple.of(clock.millis()))
-                    .map(RowSet::rowCount))
+            () -> {
+              LOGGER.info("Removing outdated session entries.");
+              return preparedQuery(
+                      repositoryQueries.deleteExpiredSessionsSql(), Tuple.of(clock.millis()))
+                  .map(RowSet::rowCount);
+            })
         .as(addMetricsIfEnabled("cleanupExpiredSessions"));
   }
 
@@ -285,7 +288,7 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
         reactiveSession.internalPrimaryKey);
   }
 
-  private Tuple buildReducedParametersForUpdate(ReactiveSession reactiveSession) {
+  private Tuple buildParametersWithoutSessionDataForUpdate(ReactiveSession reactiveSession) {
     return Tuple.of(
         reactiveSession.getId(),
         reactiveSession.getLastAccessedTime().toEpochMilli(),
@@ -317,8 +320,8 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
     private String sessionId;
     private boolean isNew;
     private boolean changed = true;
+    private final Instant creationTime;
     private Instant lastAccessedTime;
-    private Instant creationTime;
     private Duration maxInactiveInterval;
 
     /** Generate a new session. */

@@ -14,9 +14,9 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 
-public class ReactiveSessionSchemaPopulator {
+public class ReactiveSessionSchemaInitializer {
 
-  private ReactiveSessionSchemaPopulator() {
+  private ReactiveSessionSchemaInitializer() {
     // Construction is not permitted.
   }
 
@@ -54,7 +54,7 @@ public class ReactiveSessionSchemaPopulator {
 
   public static String[] parseStatementsFromSchema() {
     try (InputStream schemaStream =
-        ReactiveSessionSchemaPopulator.class.getClassLoader().getResourceAsStream("schema.sql")) {
+        ReactiveSessionSchemaInitializer.class.getClassLoader().getResourceAsStream("schema.sql")) {
       return StringUtils.split(StreamUtils.copyToString(schemaStream, UTF_8), ";");
     } catch (IOException e) {
       throw new ReactiveSessionException("Failed to read schema.sql.", e);
