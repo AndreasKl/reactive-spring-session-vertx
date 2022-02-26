@@ -4,14 +4,11 @@
 # reactive-spring-session-vertx
 
 Due to the lack of a distributed reactive Spring Session implementations for relational databases,
-this projects aims to fill the gap with a fully reactive **PostgreSQL** any **MySQL** Spring Session store.
+this projects aims to fill the gap with a fully reactive **PostgreSQL** Spring Session store.
 
 The implementation is based on **[vertx-sql-client](https://github.com/eclipse-vertx/vertx-sql-client)**.
 
 Supports JDK 8 and up. Does not depend on **Spring Boot** but can be easily used with **Spring Boot**.
-
-### A few words on MySQL
-The MySQL flavour is compatible with MySQL 5.7 and up. It is fully working but not battle tested on production like the PostgreSQL version.
 
 ## Setup instructions
 A demo project is located under `/reactive-spring-session-sample-app` written in Kotlin.
@@ -63,7 +60,7 @@ class PostgresSessionConfiguration {
 
 ## Build
 
-Just test and build, will start Postgres and MySQL as embedded databases:
+Just test and build, will start Postgres as embedded databases:
 ```bash
 mvn clean verify
 ```

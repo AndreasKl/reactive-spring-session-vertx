@@ -3,14 +3,14 @@ package net.andreaskluth.session.postgres;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.opentable.db.postgres.junit5.EmbeddedPostgresExtension;
-import com.opentable.db.postgres.junit5.PreparedDbExtension;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.sql.Connection;

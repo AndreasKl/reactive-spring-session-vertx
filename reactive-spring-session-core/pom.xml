@@ -13,7 +13,7 @@
   <version>0.0.14-SNAPSHOT</version>
 
   <name>reactive-spring-session-core</name>
-  <description>Reactive Spring Session repository for mysql (vertx-mysql-client)</description>
+  <description>Reactive Spring Session core</description>
   <url>https://github.com/AndreasKl/reactive-spring-session-vertx</url>
 
   <properties>

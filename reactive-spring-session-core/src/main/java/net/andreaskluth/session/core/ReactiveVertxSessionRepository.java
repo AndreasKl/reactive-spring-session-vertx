@@ -226,12 +226,7 @@ public class ReactiveVertxSessionRepository implements ReactiveSessionRepository
   }
 
   private UUID tryToObtainUUID(Row row, String fieldName) {
-    // FIXME: Until vertx-mysql does support UUIDs this artistic/pragmatic workaround exists.
-    try {
-      return row.getUUID(fieldName);
-    } catch (UnsupportedOperationException e) {
-      return UUID.fromString(row.getString(fieldName));
-    }
+    return row.getUUID(fieldName);
   }
 
   @Override

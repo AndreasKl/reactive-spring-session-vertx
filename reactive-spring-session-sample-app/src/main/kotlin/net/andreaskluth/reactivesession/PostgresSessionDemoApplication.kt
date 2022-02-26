@@ -1,10 +1,10 @@
 package net.andreaskluth.reactivesession
 
-import com.opentable.db.postgres.embedded.ConnectionInfo
-import com.opentable.db.postgres.embedded.PreparedDbProvider
 import io.vertx.pgclient.PgConnectOptions
 import io.vertx.sqlclient.Pool
 import io.vertx.sqlclient.PoolOptions
+import io.zonky.test.db.postgres.embedded.ConnectionInfo
+import io.zonky.test.db.postgres.embedded.PreparedDbProvider
 import net.andreaskluth.session.core.support.ReactiveSessionSchemaInitializer
 import net.andreaskluth.session.postgres.ReactivePostgresSessionConfiguration
 import org.slf4j.Logger

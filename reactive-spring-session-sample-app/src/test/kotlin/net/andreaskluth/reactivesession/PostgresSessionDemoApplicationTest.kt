@@ -1,7 +1,7 @@
 package net.andreaskluth.reactivesession
 
-import com.opentable.db.postgres.junit5.EmbeddedPostgresExtension
-import com.opentable.db.postgres.junit5.PreparedDbExtension
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeAll

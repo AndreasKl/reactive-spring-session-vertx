@@ -2,12 +2,12 @@ package net.andreaskluth.session.postgres.support;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
-import com.opentable.db.postgres.junit5.EmbeddedPostgresExtension;
-import com.opentable.db.postgres.junit5.PreparedDbExtension;
 import io.vertx.pgclient.PgException;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 import net.andreaskluth.session.core.MonoToVertxHandlerAdapter;
 import net.andreaskluth.session.core.support.ReactiveSessionSchemaInitializer;
 import net.andreaskluth.session.postgres.testsupport.TestPostgresOptions;

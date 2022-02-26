@@ -48,8 +48,8 @@
     </dependency>
 
     <dependency>
-      <groupId>com.opentable.components</groupId>
-      <artifactId>otj-pg-embedded</artifactId>
+      <groupId>io.zonky.test</groupId>
+      <artifactId>embedded-postgres</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -2,14 +2,14 @@ package net.andreaskluth.session.postgres;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.opentable.db.postgres.junit5.EmbeddedPostgresExtension;
-import com.opentable.db.postgres.junit5.PreparedDbExtension;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.MockClock;
 import io.micrometer.core.instrument.simple.SimpleConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.sqlclient.Pool;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 import java.sql.Connection;
 import java.time.Clock;
 import java.time.ZoneId;
