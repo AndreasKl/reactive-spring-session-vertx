@@ -83,7 +83,7 @@
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
     <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
     <nexus-staging-maven-plugin.version>1.6.12</nexus-staging-maven-plugin.version>
-    <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
+    <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
     <fmt-maven-plugin.version>2.13</fmt-maven-plugin.version>
     <enforcer-plugin.version>3.0.0</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.5.1</extra-enforcer-rules.version>
