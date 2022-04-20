@@ -68,7 +68,7 @@
 
     <vertx-sql-client.version>4.2.6</vertx-sql-client.version>
     <spring.version>5.3.18</spring.version>
-    <spring-session-core.version>2.6.2</spring-session-core.version>
+    <spring-session-core.version>2.6.3</spring-session-core.version>
 
     <otj-pg-embedded.version>0.13.4</otj-pg-embedded.version>
     <junit-jupiter-api.version>5.8.2</junit-jupiter-api.version>
