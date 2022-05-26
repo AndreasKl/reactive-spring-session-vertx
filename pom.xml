@@ -66,7 +66,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
 
-    <vertx-sql-client.version>4.3.0</vertx-sql-client.version>
+    <vertx-sql-client.version>4.3.1</vertx-sql-client.version>
     <spring.version>5.3.20</spring.version>
     <spring-session-core.version>2.7.0</spring-session-core.version>
 
