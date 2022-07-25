@@ -86,7 +86,7 @@
     <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
     <fmt-maven-plugin.version>2.13</fmt-maven-plugin.version>
     <enforcer-plugin.version>3.1.0</enforcer-plugin.version>
-    <extra-enforcer-rules.version>1.6.0</extra-enforcer-rules.version>
+    <extra-enforcer-rules.version>1.6.1</extra-enforcer-rules.version>
     <embedded-postgres.version>2.0.0</embedded-postgres.version>
   </properties>
 
