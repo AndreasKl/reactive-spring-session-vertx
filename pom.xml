@@ -67,7 +67,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
 
     <vertx-sql-client.version>4.3.8</vertx-sql-client.version>
-    <spring.version>6.0.4</spring.version>
+    <spring.version>6.0.5</spring.version>
     <spring-session-core.version>3.0.0</spring-session-core.version>
 
     <otj-pg-embedded.version>0.13.4</otj-pg-embedded.version>
