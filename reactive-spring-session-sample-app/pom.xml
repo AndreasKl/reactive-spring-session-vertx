@@ -26,7 +26,7 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
 
-    <kotlin.version>1.8.22</kotlin.version>
+    <kotlin.version>1.9.10</kotlin.version>
 
     <embedded-postgres.version>2.0.4</embedded-postgres.version>
     <jacoco-maven-plugin.version>0.8.4</jacoco-maven-plugin.version>
