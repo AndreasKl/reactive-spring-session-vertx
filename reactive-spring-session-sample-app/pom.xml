@@ -28,7 +28,7 @@
 
     <kotlin.version>1.9.20</kotlin.version>
 
-    <embedded-postgres.version>2.0.4</embedded-postgres.version>
+    <embedded-postgres.version>2.0.5</embedded-postgres.version>
     <jacoco-maven-plugin.version>0.8.4</jacoco-maven-plugin.version>
   </properties>
 
