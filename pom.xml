@@ -87,7 +87,7 @@
     <fmt-maven-plugin.version>2.13</fmt-maven-plugin.version>
     <enforcer-plugin.version>3.4.1</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.7.0</extra-enforcer-rules.version>
-    <embedded-postgres.version>2.0.6</embedded-postgres.version>
+    <embedded-postgres.version>2.0.7</embedded-postgres.version>
   </properties>
 
   <dependencyManagement>
